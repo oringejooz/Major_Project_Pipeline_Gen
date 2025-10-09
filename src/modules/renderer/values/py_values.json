@@ -1,0 +1,18 @@
+{
+  "project_type": "python",
+  "python_version": "3.11",
+  "matrix": {
+    "python_versions": ["3.10", "3.11", "3.12"]
+  },
+  "dependency_file": "requirements.txt",
+  "lint_command": "ruff check .",
+  "test_command": "pytest -q --cov=src --cov-report=xml",
+  "build_command": "python -m build",
+  "artifact_path": "dist/",
+  "deployment": {
+    "enabled": false
+  },
+  "triggers": {
+    "branches": ["main"]
+  }
+}

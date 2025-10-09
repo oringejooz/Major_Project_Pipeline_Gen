@@ -1,0 +1,8 @@
+- name: Set up Python {{#if matrix.python_versions}} {{expr "matrix.python"}}{{else}}{{python_version}}{{/if}}
+  uses: actions/setup-python@v5
+  with:
+    python-version: {{#if matrix.python_versions}} {{expr "matrix.python"}}{{else}}"{{python_version}}"{{/if}}
+    cache: pip
+    {{#if dependency_file}}
+    cache-dependency-path: "{{dependency_file}}"
+    {{/if}}

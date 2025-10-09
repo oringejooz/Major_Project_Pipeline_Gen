@@ -1,0 +1,9 @@
+
+
+- name: Build and push
+  uses: docker/build-push-action@v6
+  with:
+    context: .
+    push: {{ expr "github.event_name != 'pull_request'" }}
+    tags: {{ expr "steps.meta.outputs.tags" }}
+    labels: {{ expr "steps.meta.outputs.labels" }}

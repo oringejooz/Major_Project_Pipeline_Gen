@@ -1,0 +1,4 @@
+{{#if deploy.enabled}}
+- name: Deploy to {{deploy.type}}
+  run: npm run {{deploy.script}}
+{{/if}}

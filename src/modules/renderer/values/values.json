@@ -1,0 +1,146 @@
+{
+  "project_type": "generic",
+  "language": "java",
+  "package_manager": null,
+  "node_version": "18.x",
+  "lint_command": "",
+  "test_command": "",
+  "build_command": "",
+  "artifact_path": "",
+  "matrix": {},
+  "caching": {},
+  "secrets_required": [],
+  "deployment": {
+    "enabled": false,
+    "provider": "",
+    "config_file": "",
+    "mode": ""
+  },
+  "container": {
+    "enabled": false,
+    "image": "",
+    "registry": "",
+    "platforms": [
+      "linux/amd64"
+    ],
+    "cache": false,
+    "tags": [],
+    "provenance": false,
+    "sbom": false,
+    "sign": false
+  },
+  "triggers": {
+    "branches": [
+      "main"
+    ],
+    "push": true,
+    "pull_request": true,
+    "release_on_tag": true
+  },
+  "paths_filters": {},
+  "_classifier": {
+    "rules": [
+      {
+        "label": "java",
+        "confidence": 0.6,
+        "reason": "dominant Java"
+      }
+    ],
+    "hf": {
+      "model": "facebook/bart-large-mnli",
+      "labels": [
+        "java",
+        "node",
+        "docker",
+        "python",
+        "monorepo",
+        "terraform",
+        "generic"
+      ],
+      "scores": [
+        0.81341153383255,
+        0.056279174983501434,
+        0.040289584547281265,
+        0.033759813755750656,
+        0.029341472312808037,
+        0.02030823938548565,
+        0.009842297062277794
+      ],
+      "raw": {
+        "sequence": "\"Shield Your Data with Encryption\"\nTop languages: {\"Java\":\"100.00\"}\nFiles: ",
+        "labels": [
+          "java",
+          "node",
+          "docker",
+          "python",
+          "monorepo",
+          "terraform",
+          "generic"
+        ],
+        "scores": [
+          0.81341153383255,
+          0.056279174983501434,
+          0.040289584547281265,
+          0.033759813755750656,
+          0.029341472312808037,
+          0.02030823938548565,
+          0.009842297062277794
+        ]
+      }
+    },
+    "merged": [
+      {
+        "label": "java",
+        "rule": 0.6,
+        "hf": 0.81341153383255,
+        "combined": 0.7173763436079026,
+        "reasons": []
+      },
+      {
+        "label": "node",
+        "rule": 0,
+        "hf": 0.056279174983501434,
+        "combined": 0.03095354624092579,
+        "reasons": []
+      },
+      {
+        "label": "docker",
+        "rule": 0,
+        "hf": 0.040289584547281265,
+        "combined": 0.022159271501004697,
+        "reasons": []
+      },
+      {
+        "label": "python",
+        "rule": 0,
+        "hf": 0.033759813755750656,
+        "combined": 0.018567897565662864,
+        "reasons": []
+      },
+      {
+        "label": "monorepo",
+        "rule": 0,
+        "hf": 0.029341472312808037,
+        "combined": 0.01613780977204442,
+        "reasons": []
+      },
+      {
+        "label": "terraform",
+        "rule": 0,
+        "hf": 0.02030823938548565,
+        "combined": 0.011169531662017108,
+        "reasons": []
+      },
+      {
+        "label": "generic",
+        "rule": 0,
+        "hf": 0.009842297062277794,
+        "combined": 0.005413263384252787,
+        "reasons": []
+      }
+    ],
+    "chosen": [
+      "java"
+    ]
+  }
+}

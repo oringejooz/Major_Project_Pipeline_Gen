@@ -1,0 +1,7 @@
+{{#if artifact_path}}
+- name: Upload artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: build
+    path: {{artifact_path}}
+{{/if}}

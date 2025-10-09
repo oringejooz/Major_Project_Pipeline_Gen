@@ -1,0 +1,9 @@
+{{#if caching}}
+- name: Cache npm
+  uses: actions/cache@v4
+  with:
+    path: {{#each caching.paths}}{{this}}{{#unless @last}},{{/unless}}{{/each}}
+    key: "{{caching.key}}"
+    restore-keys: |
+      npm-cache-
+{{/if}}

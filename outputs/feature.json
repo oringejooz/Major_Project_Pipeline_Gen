@@ -1,0 +1,81 @@
+{
+  "repo": "KhushiJain2004/sample-node-repo",
+  "metadata": {
+    "description": null,
+    "topics": [],
+    "stars": 0,
+    "forks": 0,
+    "watchers": 0,
+    "license": "None",
+    "default_branch": "main",
+    "last_commit": "2025-10-08T17:36:39Z"
+  },
+  "composition": {
+    "languages": {
+      "JavaScript": "100.00"
+    },
+    "dominant_language": "JavaScript",
+    "total_files": 10,
+    "file_types_count": {
+      "github": 1,
+      "github/workflows": 1,
+      "yml": 1,
+      "gitignore": 1,
+      "mjs": 1,
+      "json": 2,
+      "src": 1,
+      "js": 2
+    },
+    "binary_file_ratio": "0.00%",
+    "has_docs": false,
+    "has_tests": true
+  },
+  "build_and_dependency": {
+    "package_managers": [
+      "package.json"
+    ],
+    "package_manager_count": 1,
+    "build_systems": [],
+    "frameworks": [
+      "Express"
+    ],
+    "runtimes": [
+      "Node.js"
+    ]
+  },
+  "testing_and_linting": {
+    "test_frameworks": [],
+    "lint_tools": [
+      "eslint.config.mjs"
+    ],
+    "coverage_tools": []
+  },
+  "containerization_and_deployment": {
+    "has_dockerfile": false,
+    "has_docker_compose": false,
+    "registry_reference": false,
+    "deployment_configs": []
+  },
+  "ci_cd": {
+    "has_workflows": true,
+    "existing_ci_tools": [],
+    "workflow_count": 1,
+    "workflow_triggers": [
+      "push",
+      "pull_request"
+    ]
+  },
+  "security": {
+    "has_env_file": false,
+    "secrets_mentions": [],
+    "vulnerability_configs": false
+  },
+  "derived": {
+    "project_type": "Node.js",
+    "monorepo": false,
+    "ci_required": false,
+    "recommended_templates": [
+      "node-ci"
+    ]
+  }
+}

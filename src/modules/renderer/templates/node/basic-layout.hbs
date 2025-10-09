@@ -1,0 +1,38 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    {{#if matrix.node_versions}}
+    strategy:
+      matrix:
+        node: [{{#each matrix.node_versions}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+    {{/if}}
+    steps:
+      - uses: actions/checkout@v4
+      {{> gha/setup-node this}}
+      {{> gha/step-install-dep this}}
+      {{> gha/cache-npm this}}
+      {{> gha/step-lint this}}
+      {{> gha/step-test this}}
+      {{> gha/step-build this}}
+      {{> gha/step-artifact this}}
+
+  {{!-- {{#if deployment.enabled}}
+  deploy:
+    needs: build_test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      {{> gha/setup-node this}}
+      {{> gha/cache-npm this}}
+      {{#eq deployment.provider "vercel"}}
+        {{> gha/deploy-vercel this}}
+      {{/eq}}
+  {{/if}} --}}

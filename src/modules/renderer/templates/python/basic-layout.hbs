@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    {{#if matrix.python_versions}}
+    strategy:
+      matrix:
+        python: [{{#each matrix.python_versions}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+    {{/if}}
+    steps:
+      - uses: actions/checkout@v4
+      {{> gha/setup-python this}}
+      {{> gha/pip-install this}}
+      {{> gha/step-lint this}}
+      {{> gha/step-test this}}
+      {{> gha/step-build this}}
+      {{> gha/step-artifact this}}

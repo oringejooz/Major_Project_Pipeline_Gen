@@ -1,0 +1,19 @@
+{
+  "project_type": "nodejs",
+  "language": "JavaScript",
+  "node_version": "18.x",
+  "lint_command": "npm run lint",
+  "test_command": "npm test -- --coverage",
+  "build_command": "npm run build",
+  "artifact_path": "dist/",
+  "container": {
+    "enabled": true,
+    "registry": "docker.io",
+    "image": "docker.io/yourdockeruser/yourapp",
+    "tags": ["latest", "sha"],
+    "context": ".",
+    "file": "./Dockerfile",
+    "push_on_pr": false
+  },
+  "secrets_required": ["DOCKER_USERNAME", "DOCKER_TOKEN"]
+}
