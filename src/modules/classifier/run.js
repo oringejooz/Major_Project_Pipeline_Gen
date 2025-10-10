@@ -5,9 +5,9 @@ import { classifyZeroShot } from "./utils/hfclassifier.js";
 import { mergeRuleAndHF, chooseTemplates } from "./utils/mergeUtils.js";
 import { adaptiveExtract } from "./utils/paramExtractor.js";
 
-async function main() {
+export async function classify(inputPath, outPath) {
   try {
-    const raw = await fs.readFile("./features.json", "utf8");
+    const raw = await fs.readFile(inputPath, "utf8");
     const features = JSON.parse(raw);
 
     console.log("1) Rule detection...");
@@ -40,7 +40,7 @@ async function main() {
 
     values._classifier = { rules: candidates, hf: hfResult, merged: mergedObj.merged, chosen };
 
-    await fs.writeFile("./values.json", JSON.stringify(values, null, 2), "utf8");
+    await fs.writeFile(outPath, JSON.stringify(values, null, 2), "utf8");
     console.log("✅ values.json generated.");
     console.log("Preview:", {
       project_type: values.project_type,
@@ -52,4 +52,4 @@ async function main() {
   }
 }
 
-main();
+// main();
