@@ -1,0 +1,19 @@
+{
+  "name": "classifier-module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@huggingface/inference": "^4.11.1",
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
+    "node-fetch": "^3.3.2"
+  }
+}
