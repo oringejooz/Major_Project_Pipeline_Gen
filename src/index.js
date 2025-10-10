@@ -3,7 +3,7 @@ import {classify} from "./modules/classifier/run.js"
 import path from "node:path";
 import { render } from "./modules/renderer/render.js";
 
-const repoUrl = "https://github.com/oringejooz/classifier-module/blob/main/package.json";
+const repoUrl = "https://github.com/oringejooz/classifier-module.git";
 
 const output = path.resolve('outputs/');
 const analyzerOutput=path.join(output,'feature.json');
