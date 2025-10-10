@@ -6,11 +6,15 @@ import path from "path";
 import crypto from "crypto";
 
 dotenv.config({ path: "./hf-token.env" });
-dotenv.config();
+dotenv.config({ path: "src/modules/classifier/.env" });
 
 const HF_TOKEN = process.env.HF_TOKEN;
+if (!HF_TOKEN) console.warn("⚠️ HF_TOKEN missing. Hugging Face calls will be skipped.");
+
+const hf = new InferenceClient(HF_TOKEN);
 const CACHE_DIR = path.resolve(".cache");
 
+// --- cache helpers ---
 async function _readCache(k) {
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
@@ -19,47 +23,63 @@ async function _readCache(k) {
     return null;
   }
 }
-
 async function _writeCache(k, o) {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   await fs.writeFile(path.join(CACHE_DIR, k + ".json"), JSON.stringify(o, null, 2), "utf8");
 }
-
 function _hash(x) {
   return crypto.createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
 }
 
-const hf = new InferenceClient(HF_TOKEN);
-
+/**
+ * classifyZeroShot — Hugging Face zero-shot classification with caching
+ */
 export async function classifyZeroShot(summaryText, candidateLabels = [], opts = {}) {
   const model = opts.model || "facebook/bart-large-mnli";
   const multi_label = opts.multi_label ?? true;
+
+  if (!summaryText || summaryText.trim().length < 10)
+    summaryText = "Repository description for zero-shot classification.";
+
   const key = _hash({ summaryText, candidateLabels, model });
   const cached = await _readCache(key);
   if (cached) return cached;
 
   if (!HF_TOKEN) {
-    console.warn("⚠️ HF_TOKEN missing; returning empty result");
     return { model, labels: [], scores: [], raw: { error: "no-token" } };
   }
 
   try {
-    const result = await hf.zeroShotClassification({
+    // ✅ This uses the same working API as your test-hf.js
+    const data = await hf.zeroShotClassification({
       model,
       inputs: summaryText,
       parameters: { candidate_labels: candidateLabels, multi_label },
+      provider: "hf-inference", // explicitly force correct provider
     });
 
-    const out = {
-      model,
-      labels: result.labels || [],
-      scores: result.scores || [],
-      raw: result,
-    };
+    // Normalize both possible response formats
+    let labels = [];
+    let scores = [];
+    if (Array.isArray(data) && data[0]?.label) {
+      labels = data.map((d) => d.label);
+      scores = data.map((d) => d.score);
+    } else if (data.labels && data.scores) {
+      labels = data.labels;
+      scores = data.scores;
+    }
+
+    const out = { model, labels, scores, raw: data };
+    console.log("✅ HF classification success:", labels.slice(0, 5));
     await _writeCache(key, out);
     return out;
   } catch (err) {
-    console.warn("HF zero-shot call failed:", err.message || err);
-    return { model, labels: [], scores: [], raw: { error: String(err?.message || err) } };
+    console.error("❌ HF zero-shot failed:", err.response?.data || err.message);
+    return {
+      model,
+      labels: [],
+      scores: [],
+      raw: { error: String(err?.response?.data || err?.message) },
+    };
   }
 }

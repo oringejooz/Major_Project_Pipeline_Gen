@@ -45,18 +45,122 @@
   "paths_filters": {},
   "node_version": "18.x",
   "_classifier": {
-    "rules": [],
+    "rules": [
+      {
+        "label": "node",
+        "confidence": 0.8,
+        "reason": "dominant language JavaScript"
+      },
+      {
+        "label": "java",
+        "confidence": 0.8,
+        "reason": "dominant language JavaScript"
+      }
+    ],
     "hf": {
       "model": "facebook/bart-large-mnli",
-      "labels": [],
-      "scores": [],
-      "raw": {
-        "error": "no-token"
-      }
+      "labels": [
+        "node",
+        "monorepo",
+        "terraform",
+        "docker",
+        "generic",
+        "python",
+        "java"
+      ],
+      "scores": [
+        0.3520195484161377,
+        0.19485154747962952,
+        0.15424618124961853,
+        0.05663366988301277,
+        0.02013065107166767,
+        0.017105575650930405,
+        0.01016182266175747
+      ],
+      "raw": [
+        {
+          "label": "node",
+          "score": 0.3520195484161377
+        },
+        {
+          "label": "monorepo",
+          "score": 0.19485154747962952
+        },
+        {
+          "label": "terraform",
+          "score": 0.15424618124961853
+        },
+        {
+          "label": "docker",
+          "score": 0.05663366988301277
+        },
+        {
+          "label": "generic",
+          "score": 0.02013065107166767
+        },
+        {
+          "label": "python",
+          "score": 0.017105575650930405
+        },
+        {
+          "label": "java",
+          "score": 0.01016182266175747
+        }
+      ]
     },
-    "merged": [],
+    "merged": [
+      {
+        "label": "node",
+        "rule": 0.8,
+        "hf": 0.3520195484161377,
+        "combined": 0.5536107516288757,
+        "reasons": []
+      },
+      {
+        "label": "java",
+        "rule": 0.8,
+        "hf": 0.01016182266175747,
+        "combined": 0.36558900246396664,
+        "reasons": []
+      },
+      {
+        "label": "monorepo",
+        "rule": 0,
+        "hf": 0.19485154747962952,
+        "combined": 0.10716835111379625,
+        "reasons": []
+      },
+      {
+        "label": "terraform",
+        "rule": 0,
+        "hf": 0.15424618124961853,
+        "combined": 0.0848353996872902,
+        "reasons": []
+      },
+      {
+        "label": "docker",
+        "rule": 0,
+        "hf": 0.05663366988301277,
+        "combined": 0.031148518435657028,
+        "reasons": []
+      },
+      {
+        "label": "generic",
+        "rule": 0,
+        "hf": 0.02013065107166767,
+        "combined": 0.01107185808941722,
+        "reasons": []
+      },
+      {
+        "label": "python",
+        "rule": 0,
+        "hf": 0.017105575650930405,
+        "combined": 0.009408066608011724,
+        "reasons": []
+      }
+    ],
     "chosen": [
-      "generic"
+      "node"
     ]
   }
 }

@@ -5,7 +5,12 @@ import { classifyZeroShot } from "./utils/hfclassifier.js";
 import { mergeRuleAndHF, chooseTemplates } from "./utils/mergeUtils.js";
 import { adaptiveExtract } from "./utils/paramExtractor.js";
 
-export async function classify(inputPath, outPath) {
+/**
+ * Main classifier function
+ * @param {string} inputPath - path to features.json
+ * @param {string} outputPath - path to write values.json
+ */
+export async function classify(inputPath = "./features.json", outputPath = "./values.json") {
   try {
     const raw = await fs.readFile(inputPath, "utf8");
     const features = JSON.parse(raw);
@@ -40,8 +45,8 @@ export async function classify(inputPath, outPath) {
 
     values._classifier = { rules: candidates, hf: hfResult, merged: mergedObj.merged, chosen };
 
-    await fs.writeFile(outPath, JSON.stringify(values, null, 2), "utf8");
-    console.log("✅ values.json generated.");
+    await fs.writeFile(outputPath, JSON.stringify(values, null, 2), "utf8");
+    console.log("✅ values.json generated at", outputPath);
     console.log("Preview:", {
       project_type: values.project_type,
       language: values.language,
@@ -52,4 +57,7 @@ export async function classify(inputPath, outPath) {
   }
 }
 
-// main();
+// If run.js is executed directly, use default paths
+if (process.argv[1].endsWith("run.js")) {
+  classify().catch((err) => console.error(err));
+}
