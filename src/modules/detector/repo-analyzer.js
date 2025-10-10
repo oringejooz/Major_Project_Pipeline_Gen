@@ -22,7 +22,7 @@ function countFileTypes(files) {
   return counts;
 }
 
-async function analyzeRepo(repoUrl) {
+export async function analyzeRepo(repoUrl,outPath) {
   const { owner, repo } = parseRepoUrl(repoUrl);
   console.log(`🔍 Analyzing ${owner}/${repo} ...`);
 
@@ -250,16 +250,16 @@ async function analyzeRepo(repoUrl) {
   };
 
   // --- Save Output ---
-  if (!fs.existsSync("./output")) fs.mkdirSync("./output");
-  const path = "./output/feature.json";
-  fs.writeFileSync(path, JSON.stringify(result, null, 2));
-  console.log(`✅ Analysis complete → ${path}`);
+  // if (!fs.existsSync("./output")) fs.mkdirSync("./output");
+  // const path = "./output/feature.json";
+  fs.writeFileSync(outPath, JSON.stringify(result, null, 2));
+  console.log(`✅ Analysis complete → ${outPath}`);
 }
 
 // --- Run Script ---
-const repoUrl = process.argv[2];
-if (!repoUrl) {
-  console.error("Usage: node repo-analyzer.js <github-repo-url>");
-  process.exit(1);
-}
-analyzeRepo(repoUrl).catch((err) => console.error("❌ Error:", err.message));
+// const repoUrl = process.argv[2];
+// if (!repoUrl) {
+//   console.error("Usage: node repo-analyzer.js <github-repo-url>");
+//   process.exit(1);
+// }
+// analyzeRepo(repoUrl).catch((err) => console.error("❌ Error:", err.message));

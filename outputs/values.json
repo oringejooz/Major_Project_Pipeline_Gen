@@ -2,52 +2,61 @@
   "project_type": "node",
   "language": "js",
   "package_manager": "npm",
-  "node_version": "18.x",
-
-  "lint_command": "npm run lint",
-  "test_command": "npm test -- --coverage",
-  "build_command": "npm run build",
+  "lint_command": "npm run lint || echo 'No lint script'",
+  "test_command": "npm test || echo 'No tests found'",
+  "build_command": "npm run build || echo 'No build script'",
   "artifact_path": "dist/",
-  
   "matrix": {
-    "node_versions": ["16.x", "18.x", "20.x"]
+    "node_versions": [
+      "16.x",
+      "18.x",
+      "20.x"
+    ]
   },
-
-  "caching": {
-    "paths": ["~/.npm"],
-    "key": "npm-cache-${{ hashFiles('**/package-lock.json') }}"
-  },
-
-  "secrets_required": ["NPM_TOKEN", "VERCEL_TOKEN"],
-
+  "caching": {},
+  "secrets_required": [],
   "deployment": {
-    "enabled": true,
-    "provider": "vercel",
-    "config_file": "vercel.json",
-    "mode": "cli"
+    "enabled": false,
+    "provider": "",
+    "config_file": "",
+    "mode": ""
   },
-
   "container": {
-    "enabled": true,
-    "image": "ghcr.io/OWNER/REPO",
-    "registry": "ghcr.io",
-    "platforms": ["linux/amd64"],
-    "cache": true,
-    "tags": ["latest", "sha"],
-    "provenance": true,
-    "sbom": true,
+    "enabled": false,
+    "image": "",
+    "registry": "",
+    "platforms": [
+      "linux/amd64"
+    ],
+    "cache": false,
+    "tags": [],
+    "provenance": false,
+    "sbom": false,
     "sign": false
   },
-
   "triggers": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "push": true,
     "pull_request": true,
     "release_on_tag": true
   },
-
-  "paths_filters": {
-    "frontend": ["src/**", "package.json", "package-lock.json"],
-    "docker": ["Dockerfile", ".dockerignore"]
+  "paths_filters": {},
+  "node_version": "18.x",
+  "_classifier": {
+    "rules": [],
+    "hf": {
+      "model": "facebook/bart-large-mnli",
+      "labels": [],
+      "scores": [],
+      "raw": {
+        "error": "no-token"
+      }
+    },
+    "merged": [],
+    "chosen": [
+      "generic"
+    ]
   }
 }

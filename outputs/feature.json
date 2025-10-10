@@ -1,5 +1,5 @@
 {
-  "repo": "KhushiJain2004/sample-node-repo",
+  "repo": "oringejooz/classifier-module",
   "metadata": {
     "description": null,
     "topics": [],
@@ -8,27 +8,23 @@
     "watchers": 0,
     "license": "None",
     "default_branch": "main",
-    "last_commit": "2025-10-08T17:36:39Z"
+    "last_commit": "2025-10-10T12:50:46Z"
   },
   "composition": {
     "languages": {
       "JavaScript": "100.00"
     },
     "dominant_language": "JavaScript",
-    "total_files": 10,
+    "total_files": 11,
     "file_types_count": {
-      "github": 1,
-      "github/workflows": 1,
-      "yml": 1,
       "gitignore": 1,
-      "mjs": 1,
-      "json": 2,
-      "src": 1,
-      "js": 2
+      "json": 4,
+      "js": 5,
+      "utils": 1
     },
     "binary_file_ratio": "0.00%",
     "has_docs": false,
-    "has_tests": true
+    "has_tests": false
   },
   "build_and_dependency": {
     "package_managers": [
@@ -36,18 +32,12 @@
     ],
     "package_manager_count": 1,
     "build_systems": [],
-    "frameworks": [
-      "Express"
-    ],
-    "runtimes": [
-      "Node.js"
-    ]
+    "frameworks": [],
+    "runtimes": []
   },
   "testing_and_linting": {
     "test_frameworks": [],
-    "lint_tools": [
-      "eslint.config.mjs"
-    ],
+    "lint_tools": [],
     "coverage_tools": []
   },
   "containerization_and_deployment": {
@@ -57,13 +47,10 @@
     "deployment_configs": []
   },
   "ci_cd": {
-    "has_workflows": true,
+    "has_workflows": false,
     "existing_ci_tools": [],
-    "workflow_count": 1,
-    "workflow_triggers": [
-      "push",
-      "pull_request"
-    ]
+    "workflow_count": 0,
+    "workflow_triggers": []
   },
   "security": {
     "has_env_file": false,
@@ -71,11 +58,11 @@
     "vulnerability_configs": false
   },
   "derived": {
-    "project_type": "Node.js",
+    "project_type": "JavaScript",
     "monorepo": false,
-    "ci_required": false,
+    "ci_required": true,
     "recommended_templates": [
-      "node-ci"
+      "add-ci-workflow"
     ]
   }
 }
