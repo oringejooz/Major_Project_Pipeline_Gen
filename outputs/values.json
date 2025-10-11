@@ -45,18 +45,117 @@
   "paths_filters": {},
   "node_version": "18.x",
   "_classifier": {
-    "rules": [],
+    "rules": [
+      {
+        "label": "node",
+        "confidence": 0.95,
+        "reason": "package.json present"
+      }
+    ],
     "hf": {
       "model": "facebook/bart-large-mnli",
-      "labels": [],
-      "scores": [],
-      "raw": {
-        "error": "no-token"
-      }
+      "labels": [
+        "node",
+        "monorepo",
+        "terraform",
+        "docker",
+        "generic",
+        "python",
+        "java"
+      ],
+      "scores": [
+        0.43829813599586487,
+        0.2611812353134155,
+        0.22156715393066406,
+        0.07074974477291107,
+        0.00696853781118989,
+        0.000744016608223319,
+        0.00029549156897701323
+      ],
+      "raw": [
+        {
+          "label": "node",
+          "score": 0.43829813599586487
+        },
+        {
+          "label": "monorepo",
+          "score": 0.2611812353134155
+        },
+        {
+          "label": "terraform",
+          "score": 0.22156715393066406
+        },
+        {
+          "label": "docker",
+          "score": 0.07074974477291107
+        },
+        {
+          "label": "generic",
+          "score": 0.00696853781118989
+        },
+        {
+          "label": "python",
+          "score": 0.000744016608223319
+        },
+        {
+          "label": "java",
+          "score": 0.00029549156897701323
+        }
+      ]
     },
-    "merged": [],
+    "merged": [
+      {
+        "label": "node",
+        "rule": 0.95,
+        "hf": 0.43829813599586487,
+        "combined": 0.8220745339989661,
+        "reasons": []
+      },
+      {
+        "label": "monorepo",
+        "rule": 0,
+        "hf": 0.2611812353134155,
+        "combined": 0.14364967942237855,
+        "reasons": []
+      },
+      {
+        "label": "terraform",
+        "rule": 0,
+        "hf": 0.22156715393066406,
+        "combined": 0.12186193466186525,
+        "reasons": []
+      },
+      {
+        "label": "docker",
+        "rule": 0,
+        "hf": 0.07074974477291107,
+        "combined": 0.03891235962510109,
+        "reasons": []
+      },
+      {
+        "label": "generic",
+        "rule": 0,
+        "hf": 0.00696853781118989,
+        "combined": 0.00383269579615444,
+        "reasons": []
+      },
+      {
+        "label": "python",
+        "rule": 0,
+        "hf": 0.000744016608223319,
+        "combined": 0.0004092091345228255,
+        "reasons": []
+      },
+      {
+        "label": "java",
+        "rule": 0,
+        "hf": 0.00029549156897701323,
+        "combined": 0.0001625203629373573,
+        "reasons": []
+      }
+    ],
     "chosen": [
-      "generic"
+      "node"
     ]
   }
 }

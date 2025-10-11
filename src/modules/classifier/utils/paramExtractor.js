@@ -1,14 +1,17 @@
 // utils/paramExtractor.js
 import { InferenceClient } from "@huggingface/inference";
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
-dotenv.config();
+dotenv.config({ path: "src/modules/classifier/.env" });
 
 const HF_TOKEN = process.env.HF_TOKEN;
+if (!HF_TOKEN) {
+  console.error("❌ HF_TOKEN not found in environment variables.");
+  process.exit(1);
+}
+
 const hf = new InferenceClient(HF_TOKEN);
 
-// stable model that works on free endpoints
-const MODEL = "mistralai/Mistral-7B-Instruct-v0.2";
+const MODEL = "bigscience/bloom-560m";
 
 /**
  * deterministicFallback — safe defaults
@@ -53,7 +56,6 @@ function deterministicFallback(features, chosenTemplates = []) {
     paths_filters: {},
   };
 
-  // --- Node.js ---
   const isNode =
     chosenTemplates.includes("node") ||
     dominant.includes("javascript") ||
@@ -71,7 +73,6 @@ function deterministicFallback(features, chosenTemplates = []) {
       artifact_path: "dist/",
       matrix: { node_versions: ["16.x", "18.x", "20.x"] },
     });
-    // stop here for Node, don't fall into Java
     if (hasDocker) {
       Object.assign(out.container, {
         enabled: true,
@@ -84,7 +85,6 @@ function deterministicFallback(features, chosenTemplates = []) {
     return out;
   }
 
-  // --- Python ---
   const isPython =
     chosenTemplates.includes("python") ||
     dominant.includes("python") ||
@@ -104,7 +104,6 @@ function deterministicFallback(features, chosenTemplates = []) {
     return out;
   }
 
-  // --- Java ---
   const hasPom = detectedFiles.includes("pom.xml");
   const hasGradle =
     detectedFiles.includes("build.gradle") || detectedFiles.includes("build.gradle.kts");
@@ -159,6 +158,7 @@ Rules:
     const response = await hf.textGeneration({
       model: MODEL,
       inputs: prompt,
+      provider: "hf-inference", // ✅ FIXED provider
       parameters: { max_new_tokens: 600, temperature: 0.2 },
     });
 
