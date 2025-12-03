@@ -1,29 +1,36 @@
 {
-  "repo": "oringejooz/classifier-module",
+  "repo": "dockersamples/helloworld-demo-node",
   "metadata": {
-    "description": null,
+    "description": "Example used to demonstrate docker init CLI for a simple Hello World Node Program",
     "topics": [],
-    "stars": 0,
-    "forks": 0,
-    "watchers": 0,
-    "license": "None",
+    "stars": 7,
+    "forks": 43,
+    "watchers": 3,
+    "license": "Apache-2.0",
     "default_branch": "main",
-    "last_commit": "2025-10-10T21:55:44Z"
+    "last_commit": "2024-12-02T10:58:16Z"
   },
   "composition": {
     "languages": {
-      "JavaScript": "100.00"
+      "Dockerfile": "70.13",
+      "JavaScript": "29.87"
     },
-    "dominant_language": "JavaScript",
-    "total_files": 11,
+    "dominant_language": "Dockerfile",
+    "total_files": 13,
     "file_types_count": {
-      "gitignore": 1,
-      "json": 4,
-      "js": 5,
-      "utils": 1
+      "github": 1,
+      "github/workflows": 1,
+      "yaml": 2,
+      "md": 2,
+      "Dockerfile": 1,
+      "LICENSE": 1,
+      "js": 1,
+      "json": 2,
+      "sample": 1,
+      "sample/Dockerfile": 1
     },
     "binary_file_ratio": "0.00%",
-    "has_docs": false,
+    "has_docs": true,
     "has_tests": false
   },
   "build_and_dependency": {
@@ -41,16 +48,19 @@
     "coverage_tools": []
   },
   "containerization_and_deployment": {
-    "has_dockerfile": false,
+    "has_dockerfile": true,
     "has_docker_compose": false,
     "registry_reference": false,
     "deployment_configs": []
   },
   "ci_cd": {
-    "has_workflows": false,
+    "has_workflows": true,
     "existing_ci_tools": [],
-    "workflow_count": 0,
-    "workflow_triggers": []
+    "workflow_count": 1,
+    "workflow_triggers": [
+      "push",
+      "pull_request"
+    ]
   },
   "security": {
     "has_env_file": false,
@@ -58,11 +68,11 @@
     "vulnerability_configs": false
   },
   "derived": {
-    "project_type": "JavaScript",
+    "project_type": "Dockerfile",
     "monorepo": false,
-    "ci_required": true,
+    "ci_required": false,
     "recommended_templates": [
-      "add-ci-workflow"
+      "docker-build"
     ]
   }
 }

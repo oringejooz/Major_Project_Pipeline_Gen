@@ -1,0 +1,57 @@
+{
+  "model": "facebook/bart-large-mnli",
+  "labels": [
+    "docker",
+    "polyglot",
+    "terraform",
+    "monorepo",
+    "node",
+    "python",
+    "java",
+    "generic"
+  ],
+  "scores": [
+    0.97330242395401,
+    0.7832037806510925,
+    0.23037481307983398,
+    0.16828058660030365,
+    0.04286500811576843,
+    0.0247616246342659,
+    0.005150915589183569,
+    0.0027129764202982187
+  ],
+  "raw": [
+    {
+      "label": "docker",
+      "score": 0.97330242395401
+    },
+    {
+      "label": "polyglot",
+      "score": 0.7832037806510925
+    },
+    {
+      "label": "terraform",
+      "score": 0.23037481307983398
+    },
+    {
+      "label": "monorepo",
+      "score": 0.16828058660030365
+    },
+    {
+      "label": "node",
+      "score": 0.04286500811576843
+    },
+    {
+      "label": "python",
+      "score": 0.0247616246342659
+    },
+    {
+      "label": "java",
+      "score": 0.005150915589183569
+    },
+    {
+      "label": "generic",
+      "score": 0.0027129764202982187
+    }
+  ]
+}

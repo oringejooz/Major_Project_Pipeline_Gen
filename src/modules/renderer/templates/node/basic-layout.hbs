@@ -17,7 +17,6 @@ jobs:
       - uses: actions/checkout@v4
       {{> gha/setup-node this}}
       {{> gha/step-install-dep this}}
-      {{> gha/cache-npm this}}
       {{> gha/step-lint this}}
       {{> gha/step-test this}}
       {{> gha/step-build this}}
