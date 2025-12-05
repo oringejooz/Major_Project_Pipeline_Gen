@@ -9,12 +9,13 @@ dotenv.config({ path: "./hf-token.env" });
 dotenv.config({ path: "src/modules/classifier/.env" });
 
 const HF_TOKEN = process.env.HF_TOKEN;
-if (!HF_TOKEN) console.warn("⚠️ HF_TOKEN missing. Hugging Face calls will be skipped.");
+if (!HF_TOKEN) {
+  console.warn("⚠️ HF_TOKEN missing. Hugging Face zero-shot will be skipped.");
+}
 
-const hf = new InferenceClient(HF_TOKEN);
+const hf = HF_TOKEN ? new InferenceClient(HF_TOKEN) : null;
 const CACHE_DIR = path.resolve(".cache");
 
-// --- cache helpers ---
 async function _readCache(k) {
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
@@ -23,16 +24,18 @@ async function _readCache(k) {
     return null;
   }
 }
+
 async function _writeCache(k, o) {
   await fs.mkdir(CACHE_DIR, { recursive: true });
   await fs.writeFile(path.join(CACHE_DIR, k + ".json"), JSON.stringify(o, null, 2), "utf8");
 }
+
 function _hash(x) {
   return crypto.createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
 }
 
 /**
- * classifyZeroShot — Hugging Face zero-shot classification with caching
+ * classifyZeroShot — Hugging Face zero-shot classification with caching.
  */
 export async function classifyZeroShot(summaryText, candidateLabels = [], opts = {}) {
   const model = opts.model || "facebook/bart-large-mnli";
@@ -45,20 +48,18 @@ export async function classifyZeroShot(summaryText, candidateLabels = [], opts =
   const cached = await _readCache(key);
   if (cached) return cached;
 
-  if (!HF_TOKEN) {
+  if (!HF_TOKEN || !hf) {
     return { model, labels: [], scores: [], raw: { error: "no-token" } };
   }
 
   try {
-    // ✅ This uses the same working API as your test-hf.js
     const data = await hf.zeroShotClassification({
       model,
       inputs: summaryText,
-      parameters: { candidate_labels: candidateLabels, multi_label },
-      provider: "hf-inference", // explicitly force correct provider
+      provider: "hf-inference",   // ⭐ FORCE CORRECT PROVIDER
+      parameters: { candidate_labels: candidateLabels, multi_label }
     });
 
-    // Normalize both possible response formats
     let labels = [];
     let scores = [];
     if (Array.isArray(data) && data[0]?.label) {

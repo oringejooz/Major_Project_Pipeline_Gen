@@ -1,10 +1,25 @@
 {
   "repo": "dockersamples/helloworld-demo-node",
+  "detectedFiles": [
+    ".github",
+    ".github/workflows",
+    ".github/workflows/build.yaml",
+    "contributing.md",
+    "dockerfile",
+    "license",
+    "readme.md",
+    "app.js",
+    "package-lock.json",
+    "package.json",
+    "sample",
+    "sample/dockerfile",
+    "sample/compose.yaml"
+  ],
   "metadata": {
     "description": "Example used to demonstrate docker init CLI for a simple Hello World Node Program",
     "topics": [],
-    "stars": 7,
-    "forks": 43,
+    "stars": 8,
+    "forks": 50,
     "watchers": 3,
     "license": "Apache-2.0",
     "default_branch": "main",
@@ -22,12 +37,9 @@
       "github/workflows": 1,
       "yaml": 2,
       "md": 2,
-      "Dockerfile": 1,
-      "LICENSE": 1,
+      "(none)": 4,
       "js": 1,
-      "json": 2,
-      "sample": 1,
-      "sample/Dockerfile": 1
+      "json": 2
     },
     "binary_file_ratio": "0.00%",
     "has_docs": true,
@@ -58,8 +70,7 @@
     "existing_ci_tools": [],
     "workflow_count": 1,
     "workflow_triggers": [
-      "push",
-      "pull_request"
+      "push"
     ]
   },
   "security": {

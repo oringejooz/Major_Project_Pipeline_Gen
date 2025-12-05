@@ -1,22 +1,14 @@
 {
-  "project_type": "node",
-  "language": "js",
-  "package_manager": "npm",
-  "lint_command": "npm run lint || echo 'No lint script'",
-  "test_command": "npm test || echo 'No tests found'",
-  "build_command": "npm run build || echo 'No build script'",
-  "artifact_path": "dist/",
-  "matrix": {
-    "node_versions": [
-      "16.x",
-      "18.x",
-      "20.x"
-    ]
-  },
+  "project_type": "docker",
+  "language": "docker",
+  "package_manager": null,
+  "lint_command": "",
+  "test_command": "",
+  "build_command": "docker build -t app .",
+  "artifact_path": "",
+  "matrix": {},
   "caching": {},
-  "secrets_required": [
-    "DOCKER_REGISTRY_TOKEN"
-  ],
+  "secrets_required": [],
   "deployment": {
     "enabled": false,
     "provider": "",
@@ -31,7 +23,9 @@
       "linux/amd64"
     ],
     "cache": true,
-    "tags": [],
+    "tags": [
+      "latest"
+    ],
     "provenance": false,
     "sbom": false,
     "sign": false
@@ -45,9 +39,13 @@
     "release_on_tag": true
   },
   "paths_filters": {},
-  "node_version": "18.x",
   "_classifier": {
     "rules": [
+      {
+        "label": "docker",
+        "confidence": 0.99,
+        "reason": "Dockerfile present"
+      },
       {
         "label": "node",
         "confidence": 0.95,
@@ -61,123 +59,42 @@
     ],
     "hf": {
       "model": "facebook/bart-large-mnli",
-      "labels": [
-        "docker",
-        "polyglot",
-        "terraform",
-        "monorepo",
-        "node",
-        "python",
-        "java",
-        "generic"
-      ],
-      "scores": [
-        0.97330242395401,
-        0.7832037806510925,
-        0.23037481307983398,
-        0.16828058660030365,
-        0.04286500811576843,
-        0.0247616246342659,
-        0.005150915589183569,
-        0.0027129764202982187
-      ],
-      "raw": [
-        {
-          "label": "docker",
-          "score": 0.97330242395401
-        },
-        {
-          "label": "polyglot",
-          "score": 0.7832037806510925
-        },
-        {
-          "label": "terraform",
-          "score": 0.23037481307983398
-        },
-        {
-          "label": "monorepo",
-          "score": 0.16828058660030365
-        },
-        {
-          "label": "node",
-          "score": 0.04286500811576843
-        },
-        {
-          "label": "python",
-          "score": 0.0247616246342659
-        },
-        {
-          "label": "java",
-          "score": 0.005150915589183569
-        },
-        {
-          "label": "generic",
-          "score": 0.0027129764202982187
-        }
-      ]
+      "labels": [],
+      "scores": [],
+      "raw": {}
     },
     "merged": [
       {
+        "label": "docker",
+        "rule": 0.99,
+        "hf": 0,
+        "combined": 0.99,
+        "reasons": [
+          "rule-dominant"
+        ]
+      },
+      {
         "label": "node",
         "rule": 0.95,
-        "hf": 0.04286500811576843,
-        "combined": 0.723216252028942,
-        "reasons": []
+        "hf": 0,
+        "combined": 0.95,
+        "reasons": [
+          "rule-dominant"
+        ]
       },
       {
         "label": "polyglot",
         "rule": 0.5,
-        "hf": 0.7832037806510925,
-        "combined": 0.6557620793581009,
-        "reasons": []
-      },
-      {
-        "label": "docker",
-        "rule": 0,
-        "hf": 0.97330242395401,
-        "combined": 0.5353163331747055,
-        "reasons": []
-      },
-      {
-        "label": "terraform",
-        "rule": 0,
-        "hf": 0.23037481307983398,
-        "combined": 0.1267061471939087,
-        "reasons": []
-      },
-      {
-        "label": "monorepo",
-        "rule": 0,
-        "hf": 0.16828058660030365,
-        "combined": 0.09255432263016701,
-        "reasons": []
-      },
-      {
-        "label": "python",
-        "rule": 0,
-        "hf": 0.0247616246342659,
-        "combined": 0.013618893548846246,
-        "reasons": []
-      },
-      {
-        "label": "java",
-        "rule": 0,
-        "hf": 0.005150915589183569,
-        "combined": 0.002833003574050963,
-        "reasons": []
-      },
-      {
-        "label": "generic",
-        "rule": 0,
-        "hf": 0.0027129764202982187,
-        "combined": 0.0014921370311640205,
-        "reasons": []
+        "hf": 0,
+        "combined": 0.5,
+        "reasons": [
+          "rule-dominant"
+        ]
       }
     ],
     "chosen": [
-      "node",
-      "polyglot",
       "docker"
-    ]
+    ],
+    "primary": "docker"
   }
 }

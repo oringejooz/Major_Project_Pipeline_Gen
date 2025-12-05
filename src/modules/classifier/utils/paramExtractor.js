@@ -1,35 +1,46 @@
 // utils/paramExtractor.js
 import { InferenceClient } from "@huggingface/inference";
 import dotenv from "dotenv";
+
 dotenv.config({ path: "src/modules/classifier/.env" });
 
 const HF_TOKEN = process.env.HF_TOKEN;
+const PARAM_MODEL =
+  process.env.HF_PARAM_MODEL || "mistralai/Mistral-7B-Instruct-v0.2";
+
+const hf = HF_TOKEN ? new InferenceClient(HF_TOKEN) : null;
+
 if (!HF_TOKEN) {
-  console.error("❌ HF_TOKEN not found in environment variables.");
-  process.exit(1);
+  console.warn(
+    "⚠️ HF_TOKEN not found; param extraction will use deterministic fallback only."
+  );
 }
-
-const hf = new InferenceClient(HF_TOKEN);
-
-const MODEL = "bigscience/bloom-560m";
 
 /**
  * deterministicFallback — safe defaults
  */
-function deterministicFallback(features, chosenTemplates = []) {
-  if (typeof chosenTemplates === "string") chosenTemplates = [chosenTemplates];
-  const langs = features?.composition?.languages || features?.languages || {};
+function deterministicFallback(features, primaryTemplate) {
+  const comp = features?.composition || {};
+  const langs = comp.languages || features?.languages || {};
   const dominant =
-    features?.composition?.dominant_language?.toLowerCase() ||
+    comp.dominant_language?.toLowerCase() ||
+    features?.dominant_language?.toLowerCase() ||
     Object.keys(langs)[0]?.toLowerCase() ||
     "";
-  const detectedFiles = (features.detectedFiles || []).map((f) => f.toLowerCase());
+
+  const detectedFilesRaw = [
+    ...(features.detectedFiles || []),
+    ...Object.keys(comp.file_types_count || {}),
+    ...(features.build_and_dependency?.package_managers || []),
+  ];
+  const detectedFiles = detectedFilesRaw.map((f) => String(f).toLowerCase());
+
   const hasDocker =
     features?.containerization_and_deployment?.has_dockerfile ||
     detectedFiles.includes("dockerfile") ||
-    false;
+    Object.keys(langs).some((l) => l.toLowerCase() === "dockerfile");
 
-  const out = {
+  const base = {
     project_type: "generic",
     language: dominant || "unknown",
     package_manager: null,
@@ -52,17 +63,38 @@ function deterministicFallback(features, chosenTemplates = []) {
       sbom: false,
       sign: false,
     },
-    triggers: { branches: ["main"], push: true, pull_request: true, release_on_tag: true },
+    triggers: {
+      branches: [features?.metadata?.default_branch || "main"],
+      push: true,
+      pull_request: true,
+      release_on_tag: true,
+    },
     paths_filters: {},
   };
 
-  const isNode =
-    chosenTemplates.includes("node") ||
-    dominant.includes("javascript") ||
-    detectedFiles.includes("package.json");
+  const primary = (primaryTemplate || "").toLowerCase();
 
-  if (isNode) {
-    Object.assign(out, {
+  if (primary === "docker" || (hasDocker && !["node", "python", "java"].includes(primary))) {
+    return {
+      ...base,
+      project_type: "docker",
+      language: "docker",
+      build_command: "docker build -t app .",
+      container: {
+        ...base.container,
+        enabled: true,
+        image: "ghcr.io/OWNER/REPO",
+        registry: "ghcr.io",
+        platforms: ["linux/amd64"],
+        cache: true,
+        tags: ["latest"],
+      },
+    };
+  }
+
+  if (primary === "node") {
+    const out = {
+      ...base,
       project_type: "node",
       language: "js",
       package_manager: "npm",
@@ -72,50 +104,43 @@ function deterministicFallback(features, chosenTemplates = []) {
       build_command: "npm run build || echo 'No build script'",
       artifact_path: "dist/",
       matrix: { node_versions: ["16.x", "18.x", "20.x"] },
-    });
+    };
+
     if (hasDocker) {
-      Object.assign(out.container, {
+      out.container = {
+        ...out.container,
         enabled: true,
         image: "ghcr.io/OWNER/REPO",
         registry: "ghcr.io",
         cache: true,
-      });
-      out.secrets_required.push("DOCKER_REGISTRY_TOKEN");
+      };
+      out.secrets_required = ["DOCKER_REGISTRY_TOKEN"];
     }
     return out;
   }
 
-  const isPython =
-    chosenTemplates.includes("python") ||
-    dominant.includes("python") ||
-    detectedFiles.includes("requirements.txt");
-
-  if (isPython) {
-    Object.assign(out, {
+  if (primary === "python") {
+    return {
+      ...base,
       project_type: "python",
       language: "py",
       package_manager: "pip",
-      lint_command: "flake8 .",
+      lint_command: "flake8 . || echo 'No flake8 config'",
       test_command: "pytest || python -m unittest",
       build_command: "python -m build || python setup.py sdist",
       artifact_path: "dist/",
       matrix: { python_versions: ["3.9", "3.10", "3.11"] },
-    });
-    return out;
+    };
   }
 
-  const hasPom = detectedFiles.includes("pom.xml");
-  const hasGradle =
-    detectedFiles.includes("build.gradle") || detectedFiles.includes("build.gradle.kts");
+  if (primary === "java") {
+    const hasPom = detectedFiles.includes("pom.xml");
+    const hasGradle =
+      detectedFiles.includes("build.gradle") ||
+      detectedFiles.includes("build.gradle.kts");
 
-  const isJava =
-    chosenTemplates.includes("java") ||
-    dominant.includes("java") ||
-    hasPom ||
-    hasGradle;
-
-  if (isJava) {
-    Object.assign(out, {
+    return {
+      ...base,
       project_type: "java",
       language: "java",
       package_manager: hasPom ? "maven" : hasGradle ? "gradle" : null,
@@ -124,53 +149,100 @@ function deterministicFallback(features, chosenTemplates = []) {
         : hasGradle
         ? "./gradlew build --no-daemon -x test"
         : "javac -d out $(find src -name '*.java' 2>/dev/null)",
-      test_command: hasPom ? "mvn test" : hasGradle ? "./gradlew test" : "",
+      test_command: hasPom
+        ? "mvn test"
+        : hasGradle
+        ? "./gradlew test"
+        : "",
       artifact_path: hasPom ? "target/" : hasGradle ? "build/" : "",
-    });
-    return out;
+    };
   }
 
-  return out;
+  return base;
 }
 
 /**
- * adaptiveExtract — call LLM with fallback
+ * adaptiveExtract — LLM refinement
  */
 export async function adaptiveExtract(features, mergedSuggestion = {}) {
-  if (!HF_TOKEN) {
-    console.warn("⚠️ HF_TOKEN missing; using fallback.");
-    return deterministicFallback(features, mergedSuggestion.chosen || []);
-  }
+  const primary =
+    mergedSuggestion.primary ||
+    (mergedSuggestion.chosen && mergedSuggestion.chosen[0]) ||
+    "generic";
+
+  const base = deterministicFallback(features, primary);
+
+  if (!HF_TOKEN || !hf) return base;
+
+  const featuresSummary = {
+    repo: features.repo,
+    dominant_language: features.composition?.dominant_language,
+    languages: features.composition?.languages,
+    frameworks: features.build_and_dependency?.frameworks,
+    runtimes: features.build_and_dependency?.runtimes,
+    has_dockerfile: features.containerization_and_deployment?.has_dockerfile,
+    detectedFiles: (features.detectedFiles || []).slice(0, 25),
+  };
 
   const prompt = `
-You are a CI/CD configuration assistant.
-Given repository metadata and classifier hints, output a valid JSON config.
-Repository features:
-${JSON.stringify(features, null, 2)}
-Classifier hints:
-${JSON.stringify(mergedSuggestion, null, 2)}
-Rules:
-- Return strictly valid JSON.
-- Use safe defaults.
+You are a CI/CD assistant. Only output a JSON object of overrides.
+
+Repository:
+${JSON.stringify(featuresSummary, null, 2)}
+
+Classifier:
+${JSON.stringify(
+    {
+      primary,
+      top_labels: (mergedSuggestion.merged || [])
+        .slice(0, 5)
+        .map((m) => ({
+          label: m.label,
+          rule: m.rule,
+          hf: m.hf,
+          combined: m.combined,
+        })),
+    },
+    null,
+    2
+  )}
 `;
 
   try {
     const response = await hf.textGeneration({
-      model: MODEL,
+      model: PARAM_MODEL,
       inputs: prompt,
-      provider: "hf-inference", // ✅ FIXED provider
-      parameters: { max_new_tokens: 600, temperature: 0.2 },
+      provider: "hf-inference",   // ⭐ CORRECT PROVIDER
+      parameters: {
+        max_new_tokens: 500,
+        temperature: 0.2,
+      },
     });
 
-    const outputText = response.generated_text || JSON.stringify(response);
-    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found in model output");
+    const text =
+      response?.generated_text ||
+      response?.[0]?.generated_text ||
+      JSON.stringify(response);
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("Model returned no JSON");
+
     const parsed = JSON.parse(jsonMatch[0]);
 
-    const fallback = deterministicFallback(features, mergedSuggestion.chosen || []);
-    return { ...fallback, ...parsed };
+    return {
+      ...base,
+      ...parsed,
+      container: {
+        ...base.container,
+        ...(parsed.container || {}),
+      },
+      triggers: {
+        ...base.triggers,
+        ...(parsed.triggers || {}),
+      },
+    };
   } catch (err) {
     console.warn("Adaptive extraction failed:", err.message);
-    return deterministicFallback(features, mergedSuggestion.chosen || []);
+    return base;
   }
 }
