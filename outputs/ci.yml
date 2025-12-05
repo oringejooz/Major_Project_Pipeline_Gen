@@ -24,7 +24,7 @@ jobs:
       - name: Lint
         run: npm run lint || echo 'No lint script'
       - name: Test
-        run: npm test || echo 'No tests found'
+        run: npm test
       - name: Build
         run: npm run build || echo 'No build script'
       - name: Upload artifact

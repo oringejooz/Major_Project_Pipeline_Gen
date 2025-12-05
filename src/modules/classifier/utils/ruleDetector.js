@@ -1,12 +1,10 @@
-// utils/ruleDetector.js
+// src/modules/classifier/utils/ruleDetector.js
 
 /**
  * Rule-based detector:
  * - Uses file signals, languages, frameworks, and derived.recommended_templates
  * - Produces high-confidence hints for the primary pipeline type
- * - DOES NOT call any external services (pure, deterministic)
  */
-
 export function runRuleDetector(features = {}) {
   const rawCandidates = [];
 
@@ -16,19 +14,19 @@ export function runRuleDetector(features = {}) {
 
   const languages = comp.languages || features.languages || {};
   const dominant =
-    (comp.dominant_language ||
+    (
+      comp.dominant_language ||
       features.dominant_language ||
       Object.keys(languages)[0] ||
       ""
     ).toLowerCase();
 
-  // detectedFiles already normalized to lowercase in analyzer, but we re-normalize for safety
   const detectedFilesRaw = [
     ...(features.detectedFiles || []),
     ...Object.keys(comp.file_types_count || {}),
-    ...(buildDep.package_managers || []),
+    ...((buildDep.package_managers) || []),
   ];
-  const detectedFiles = detectedFilesRaw.map((f) => String(f).toLowerCase());
+  const detectedFiles = detectedFilesRaw.map((f) => f.toLowerCase());
 
   const frameworks = (buildDep.frameworks || features.frameworks || []).map((s) =>
     s.toLowerCase()
@@ -42,28 +40,37 @@ export function runRuleDetector(features = {}) {
   const push = (label, conf, reason) =>
     rawCandidates.push({ label, confidence: conf, reason });
 
-  // --- File-based detection (very strong) ---
-  if (detectedFiles.includes("package.json")) {
-    push("node", 0.95, "package.json present");
-  }
-  if (detectedFiles.includes("requirements.txt")) {
-    push("python", 0.95, "requirements.txt present");
-  }
-  if (
-    detectedFiles.includes("pom.xml") ||
+  // --- Very strong file-based hints ---
+  const hasPackageJson = detectedFiles.includes("package.json");
+  const hasRequirements = detectedFiles.includes("requirements.txt");
+  const hasPom = detectedFiles.includes("pom.xml");
+  const hasGradle =
     detectedFiles.includes("build.gradle") ||
-    detectedFiles.includes("build.gradle.kts")
-  ) {
-    push("java", 0.95, "Java build descriptor present");
+    detectedFiles.includes("build.gradle.kts");
+  const hasGoMod = detectedFiles.includes("go.mod");
+  const hasMainTf = detectedFiles.includes("main.tf");
+
+  if (hasPackageJson) {
+    push("node", 0.97, "package.json present");
   }
-  if (detectedFiles.includes("go.mod")) {
+  if (hasRequirements) {
+    push("python", 0.97, "requirements.txt present");
+  }
+  if (hasPom || hasGradle) {
+    // Only push 'java' strongly if no Node signals
+    if (!hasPackageJson) {
+      push("java", 0.95, "Java build descriptor present");
+    } else {
+      push("java", 0.6, "Java descriptor present but JS indicators stronger");
+    }
+  }
+  if (hasGoMod) {
     push("go", 0.95, "go.mod present");
   }
-  if (detectedFiles.some((f) => f.endsWith(".tf"))) {
-    push("terraform", 0.9, ".tf files present (Terraform)");
+  if (hasMainTf) {
+    push("terraform", 0.9, "main.tf present (Terraform)");
   }
 
-  // Docker is a *very* strong hint when Dockerfile is present
   if (hasDockerfile) {
     push("docker", 0.99, "Dockerfile present");
   }
@@ -72,23 +79,24 @@ export function runRuleDetector(features = {}) {
   if (frameworks.some((f) => f.includes("flask") || f.includes("django") || f.includes("fastapi"))) {
     push("python", 0.9, `Python framework detected: ${frameworks.join(", ")}`);
   }
-  if (frameworks.some((f) => f.includes("express") || f.includes("next"))) {
-    push("node", 0.9, `Node framework detected: ${frameworks.join(", ")}`);
+  if (frameworks.includes("express") || frameworks.includes("next.js") || frameworks.includes("react")) {
+    push("node", 0.9, "Node.js ecosystem framework detected");
   }
-  if (frameworks.some((f) => f.includes("spring"))) {
+  if (frameworks.includes("spring") || frameworks.includes("spring boot")) {
     push("java", 0.9, "Spring framework detected");
   }
 
   // --- Dominant language hints (moderate) ---
   if (dominant) {
     if (dominant.includes("javascript")) {
-      push("node", 0.6, `dominant language hint: ${dominant}`);
+      push("node", 0.7, `dominant language: ${dominant}`);
     } else if (dominant.includes("python")) {
-      push("python", 0.6, `dominant language hint: ${dominant}`);
+      push("python", 0.7, `dominant language: ${dominant}`);
     } else if (dominant.includes("java")) {
-      push("java", 0.6, `dominant language hint: ${dominant}`);
+      // Only give moderate weight so Node + package.json still wins if present
+      push("java", 0.6, `dominant language: ${dominant}`);
     } else if (dominant.includes("go")) {
-      push("go", 0.6, `dominant language hint: ${dominant}`);
+      push("go", 0.6, `dominant language: ${dominant}`);
     } else if (dominant.includes("dockerfile")) {
       push("docker", 0.7, "dominant language is Dockerfile");
     }
@@ -97,7 +105,7 @@ export function runRuleDetector(features = {}) {
   // --- Derived hints from analyzer ---
   const recommended = derived.recommended_templates || [];
   for (const tmpl of recommended) {
-    const t = String(tmpl).toLowerCase();
+    const t = tmpl.toLowerCase();
     if (t.includes("docker")) {
       push("docker", 0.8, `derived recommended template: ${tmpl}`);
     } else if (t.includes("node")) {
@@ -135,7 +143,6 @@ export function runRuleDetector(features = {}) {
     (a, b) => b.confidence - a.confidence
   );
 
-  // Summary string for zero-shot classifier (kept compact)
   const summaryParts = [
     `Repo: ${features.repo || "unknown"}`,
     `Dominant language: ${dominant || "unknown"}`,
@@ -143,9 +150,9 @@ export function runRuleDetector(features = {}) {
     `Frameworks: ${frameworks.join(", ") || "none"}`,
     `Has Dockerfile: ${hasDockerfile ? "yes" : "no"}`,
     `Recommended templates: ${(recommended || []).join(", ") || "none"}`,
-    `Detected files sample: ${(features.detectedFiles || []).slice(0, 15).join(", ") || "none"}`,
+    `Detected files sample: ${detectedFiles.slice(0, 12).join(", ") || "none"}`,
   ];
   const summary = summaryParts.join("\n");
 
-  return { candidates, summary };
+  return { candidates, summary, detectedFiles, languages };
 }

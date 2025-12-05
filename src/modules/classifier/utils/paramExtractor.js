@@ -1,25 +1,20 @@
-// utils/paramExtractor.js
+// src/modules/classifier/utils/paramExtractor.js
 import { InferenceClient } from "@huggingface/inference";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "src/modules/classifier/.env" });
 
-const HF_TOKEN = process.env.HF_TOKEN;
-const PARAM_MODEL =
-  process.env.HF_PARAM_MODEL || "mistralai/Mistral-7B-Instruct-v0.2";
+const HF_TOKEN = process.env.HF_TOKEN || null;
+const HF_PARAM_MODEL = process.env.HF_PARAM_MODEL || null; // <= ONLY if you explicitly set one
 
-const hf = HF_TOKEN ? new InferenceClient(HF_TOKEN) : null;
-
-if (!HF_TOKEN) {
-  console.warn(
-    "⚠️ HF_TOKEN not found; param extraction will use deterministic fallback only."
-  );
-}
+const hf = HF_TOKEN && HF_PARAM_MODEL ? new InferenceClient(HF_TOKEN) : null;
 
 /**
- * deterministicFallback — safe defaults
+ * deterministicFallback — safe, language-aware defaults
  */
-function deterministicFallback(features, primaryTemplate) {
+function deterministicFallback(features, chosenTemplates = []) {
+  if (typeof chosenTemplates === "string") chosenTemplates = [chosenTemplates];
+
   const comp = features?.composition || {};
   const langs = comp.languages || features?.languages || {};
   const dominant =
@@ -31,14 +26,18 @@ function deterministicFallback(features, primaryTemplate) {
   const detectedFilesRaw = [
     ...(features.detectedFiles || []),
     ...Object.keys(comp.file_types_count || {}),
-    ...(features.build_and_dependency?.package_managers || []),
+    ...((features.build_and_dependency?.package_managers) || []),
   ];
-  const detectedFiles = detectedFilesRaw.map((f) => String(f).toLowerCase());
+  const detectedFiles = detectedFilesRaw.map((f) => f.toLowerCase());
 
   const hasDocker =
     features?.containerization_and_deployment?.has_dockerfile ||
     detectedFiles.includes("dockerfile") ||
-    Object.keys(langs).some((l) => l.toLowerCase() === "dockerfile");
+    Object.keys(langs).some((l) => l.toLowerCase() === "dockerfile") ||
+    false;
+
+  const nodeMeta = features.build_and_dependency?.node_metadata || {};
+  const pythonMeta = features.build_and_dependency?.python_metadata || {};
 
   const base = {
     project_type: "generic",
@@ -72,38 +71,64 @@ function deterministicFallback(features, primaryTemplate) {
     paths_filters: {},
   };
 
-  const primary = (primaryTemplate || "").toLowerCase();
+  const isNodeHint =
+    dominant.includes("javascript") || detectedFiles.includes("package.json");
+  const isPythonHint =
+    dominant.includes("python") || detectedFiles.includes("requirements.txt");
+  const isJavaPom =
+    detectedFiles.includes("pom.xml") ||
+    detectedFiles.includes("build.gradle") ||
+    detectedFiles.includes("build.gradle.kts");
 
-  if (primary === "docker" || (hasDocker && !["node", "python", "java"].includes(primary))) {
-    return {
-      ...base,
-      project_type: "docker",
-      language: "docker",
-      build_command: "docker build -t app .",
-      container: {
-        ...base.container,
-        enabled: true,
-        image: "ghcr.io/OWNER/REPO",
-        registry: "ghcr.io",
-        platforms: ["linux/amd64"],
-        cache: true,
-        tags: ["latest"],
-      },
+  const isNode =
+    chosenTemplates.includes("node") || isNodeHint;
+  const isPython =
+    chosenTemplates.includes("python") || isPythonHint;
+  const isJava =
+    chosenTemplates.includes("java") || isJavaPom;
+  const isDockerChosen = chosenTemplates.includes("docker");
+
+  // --- Docker-only repositories ---
+  if (isDockerChosen && !isNode && !isPython && !isJava) {
+    const out = { ...base };
+    out.project_type = "docker";
+    out.language = "docker";
+    out.build_command = "docker build -t app .";
+    out.test_command = "";
+    out.container = {
+      ...out.container,
+      enabled: true,
+      image: "ghcr.io/OWNER/REPO",
+      registry: "ghcr.io",
+      platforms: ["linux/amd64"],
+      cache: true,
+      tags: ["latest"],
     };
+    return out;
   }
 
-  if (primary === "node") {
-    const out = {
-      ...base,
-      project_type: "node",
-      language: "js",
-      package_manager: "npm",
-      node_version: "18.x",
-      lint_command: "npm run lint || echo 'No lint script'",
-      test_command: "npm test || echo 'No tests found'",
-      build_command: "npm run build || echo 'No build script'",
-      artifact_path: "dist/",
-      matrix: { node_versions: ["16.x", "18.x", "20.x"] },
+  // --- Node.js ---
+  if (isNode) {
+    const out = { ...base };
+    out.project_type = "node";
+    out.language = "js";
+    out.package_manager = "npm";
+    out.node_version = nodeMeta.nodeVersion || "18.x";
+
+    // Prefer real scripts if present
+    const scripts = nodeMeta.scripts || {};
+    out.lint_command =
+      scripts.lint ? "npm run lint" : "npm run lint || echo 'No lint script'";
+    out.test_command =
+      scripts.test ? "npm test" : "npm test || echo 'No tests found'";
+    out.build_command =
+      scripts.build ? "npm run build" : "npm run build || echo 'No build script'";
+    out.artifact_path = "dist/";
+    out.matrix = { node_versions: ["16.x", "18.x", "20.x"] };
+
+    out.caching = {
+      paths: ["~/.npm"],
+      key: "npm-cache-${{ hashFiles('**/package-lock.json') }}",
     };
 
     if (hasDocker) {
@@ -112,124 +137,111 @@ function deterministicFallback(features, primaryTemplate) {
         enabled: true,
         image: "ghcr.io/OWNER/REPO",
         registry: "ghcr.io",
+        platforms: ["linux/amd64"],
         cache: true,
       };
-      out.secrets_required = ["DOCKER_REGISTRY_TOKEN"];
+      out.secrets_required = [...out.secrets_required, "DOCKER_REGISTRY_TOKEN"];
     }
     return out;
   }
 
-  if (primary === "python") {
-    return {
-      ...base,
-      project_type: "python",
-      language: "py",
-      package_manager: "pip",
-      lint_command: "flake8 . || echo 'No flake8 config'",
-      test_command: "pytest || python -m unittest",
-      build_command: "python -m build || python setup.py sdist",
-      artifact_path: "dist/",
-      matrix: { python_versions: ["3.9", "3.10", "3.11"] },
+  // --- Python ---
+  if (isPython) {
+    const out = { ...base };
+    out.project_type = "python";
+    out.language = "py";
+    out.package_manager = "pip";
+    out.lint_command = "flake8 . || echo 'No flake8 config'";
+    out.test_command = pythonMeta.has_pytest
+      ? "pytest"
+      : "pytest || python -m unittest";
+    out.build_command = "python -m build || python setup.py sdist";
+    out.artifact_path = "dist/";
+    out.matrix = { python_versions: ["3.9", "3.10", "3.11"] };
+    out.caching = {
+      paths: ["~/.cache/pip"],
+      key: "pip-cache-${{ hashFiles('**/requirements.txt') }}",
     };
+    return out;
   }
 
-  if (primary === "java") {
+  // --- Java ---
+  if (isJava) {
+    const out = { ...base };
+    out.project_type = "java";
+    out.language = "java";
     const hasPom = detectedFiles.includes("pom.xml");
     const hasGradle =
       detectedFiles.includes("build.gradle") ||
       detectedFiles.includes("build.gradle.kts");
-
-    return {
-      ...base,
-      project_type: "java",
-      language: "java",
-      package_manager: hasPom ? "maven" : hasGradle ? "gradle" : null,
-      build_command: hasPom
-        ? "mvn -B -DskipTests package"
-        : hasGradle
-        ? "./gradlew build --no-daemon -x test"
-        : "javac -d out $(find src -name '*.java' 2>/dev/null)",
-      test_command: hasPom
-        ? "mvn test"
-        : hasGradle
-        ? "./gradlew test"
-        : "",
-      artifact_path: hasPom ? "target/" : hasGradle ? "build/" : "",
-    };
+    out.package_manager = hasPom ? "maven" : hasGradle ? "gradle" : null;
+    out.build_command = hasPom
+      ? "mvn -B -DskipTests package"
+      : hasGradle
+      ? "./gradlew build --no-daemon -x test"
+      : "javac -d out $(find src -name '*.java' 2>/dev/null)";
+    out.test_command = hasPom
+      ? "mvn test"
+      : hasGradle
+      ? "./gradlew test"
+      : "";
+    out.artifact_path = hasPom ? "target/" : hasGradle ? "build/" : "";
+    return out;
   }
 
+  // Generic fallback
   return base;
 }
 
 /**
- * adaptiveExtract — LLM refinement
+ * adaptiveExtract — uses LLM *only if* HF_PARAM_MODEL is set; otherwise deterministic only.
  */
 export async function adaptiveExtract(features, mergedSuggestion = {}) {
-  const primary =
-    mergedSuggestion.primary ||
-    (mergedSuggestion.chosen && mergedSuggestion.chosen[0]) ||
-    "generic";
+  const chosenTemplates = mergedSuggestion.chosen || [];
+  const base = deterministicFallback(features, chosenTemplates);
 
-  const base = deterministicFallback(features, primary);
-
-  if (!HF_TOKEN || !hf) return base;
-
-  const featuresSummary = {
-    repo: features.repo,
-    dominant_language: features.composition?.dominant_language,
-    languages: features.composition?.languages,
-    frameworks: features.build_and_dependency?.frameworks,
-    runtimes: features.build_and_dependency?.runtimes,
-    has_dockerfile: features.containerization_and_deployment?.has_dockerfile,
-    detectedFiles: (features.detectedFiles || []).slice(0, 25),
-  };
+  if (!HF_TOKEN || !HF_PARAM_MODEL || !hf) {
+    // No text-generation model configured → no LLM, no error.
+    return base;
+  }
 
   const prompt = `
-You are a CI/CD assistant. Only output a JSON object of overrides.
+You are a CI/CD configuration assistant.
+Given repository metadata and classifier hints, output a valid JSON object
+with overrides for CI parameters.
 
-Repository:
-${JSON.stringify(featuresSummary, null, 2)}
+Repository features:
+${JSON.stringify(features, null, 2)}
 
-Classifier:
-${JSON.stringify(
-    {
-      primary,
-      top_labels: (mergedSuggestion.merged || [])
-        .slice(0, 5)
-        .map((m) => ({
-          label: m.label,
-          rule: m.rule,
-          hf: m.hf,
-          combined: m.combined,
-        })),
-    },
-    null,
-    2
-  )}
+Classifier hints:
+${JSON.stringify(mergedSuggestion, null, 2)}
+
+Rules:
+- Respond with ONLY a single JSON object, no commentary.
+- Include fields ONLY if you want to override the defaults.
+- Prefer simple, safe commands (npm, pytest, mvn, etc.).
 `;
 
   try {
     const response = await hf.textGeneration({
-      model: PARAM_MODEL,
+      model: HF_PARAM_MODEL,
       inputs: prompt,
-      provider: "hf-inference",   // ⭐ CORRECT PROVIDER
+      provider: "hf-inference",
       parameters: {
-        max_new_tokens: 500,
+        max_new_tokens: 600,
         temperature: 0.2,
       },
     });
 
-    const text =
-      response?.generated_text ||
-      response?.[0]?.generated_text ||
-      JSON.stringify(response);
-
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Model returned no JSON");
+    const outputText =
+      response.generated_text || JSON.stringify(response);
+    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON found in model output");
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    return {
+    // Merge: base is authoritative; parsed only overrides specific keys
+    const merged = {
       ...base,
       ...parsed,
       container: {
@@ -241,8 +253,10 @@ ${JSON.stringify(
         ...(parsed.triggers || {}),
       },
     };
+
+    return merged;
   } catch (err) {
-    console.warn("Adaptive extraction failed:", err.message);
+    console.warn("Adaptive extraction failed, using fallback:", err.message);
     return base;
   }
 }

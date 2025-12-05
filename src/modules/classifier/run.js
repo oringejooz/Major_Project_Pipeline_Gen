@@ -1,4 +1,4 @@
-// run.js
+// src/modules/classifier/run.js
 import fs from "fs/promises";
 import { runRuleDetector } from "./utils/ruleDetector.js";
 import { classifyZeroShot } from "./utils/hfclassifier.js";
@@ -22,33 +22,25 @@ export async function classify(
     const { candidates, summary } = runRuleDetector(features);
     console.log("   rule candidates:", candidates.slice(0, 5));
 
-    // If we have a super-strong rule signal (>= 0.97), skip HF entirely
-    const top = candidates[0];
-    let hfResult = { model: "facebook/bart-large-mnli", labels: [], scores: [], raw: {} };
-    if (!top || top.confidence < 0.97) {
-      console.log("2) HF zero-shot (disambiguation)...");
-      const candidateLabels = Array.from(
-        new Set([
-          ...candidates.map((c) => c.label),
-          "node",
-          "python",
-          "java",
-          "go",
-          "docker",
-          "terraform",
-          "generic",
-        ])
-      );
+    console.log("2) HF zero-shot (disambiguation)...");
+    const candidateLabels = Array.from(
+      new Set([
+        ...candidates.map((c) => c.label),
+        "node",
+        "python",
+        "java",
+        "go",
+        "docker",
+        "terraform",
+        "monorepo",
+        "generic",
+      ])
+    );
 
-      hfResult = await classifyZeroShot(summary, candidateLabels, {
-        multi_label: true,
-      });
-      console.log("   hf labels:", hfResult.labels?.slice(0, 10) || []);
-    } else {
-      console.log(
-        `2) Skipping HF zero-shot: strong rule signal for '${top.label}' (${top.confidence})`
-      );
-    }
+    const hfResult = await classifyZeroShot(summary, candidateLabels, {
+      multi_label: true,
+    });
+    console.log("   hf labels:", hfResult.labels?.slice(0, 10) || []);
 
     console.log("3) Merge rule + HF signals...");
     const mergedObj = mergeRuleAndHF(candidates, hfResult);
@@ -83,7 +75,7 @@ export async function classify(
   }
 }
 
-// If run.js is executed directly, use default paths
+// If run.js is executed directly
 if (process.argv[1] && process.argv[1].endsWith("run.js")) {
   classify().catch((err) => console.error(err));
 }

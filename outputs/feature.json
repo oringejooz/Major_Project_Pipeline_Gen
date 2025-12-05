@@ -52,7 +52,17 @@
     "package_manager_count": 1,
     "build_systems": [],
     "frameworks": [],
-    "runtimes": []
+    "runtimes": [],
+    "node_metadata": {
+      "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+      },
+      "dependencies": {},
+      "engines": {},
+      "nodeVersion": null
+    },
+    "python_metadata": {},
+    "java_metadata": {}
   },
   "testing_and_linting": {
     "test_frameworks": [],
@@ -79,7 +89,6 @@
     "vulnerability_configs": false
   },
   "derived": {
-    "project_type": "Dockerfile",
     "monorepo": false,
     "ci_required": false,
     "recommended_templates": [
