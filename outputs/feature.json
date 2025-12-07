@@ -1,67 +1,57 @@
 {
-  "repo": "dockersamples/helloworld-demo-node",
+  "repo": "oringejooz/demo-python-test",
   "detectedFiles": [
-    ".github",
-    ".github/workflows",
-    ".github/workflows/build.yaml",
-    "contributing.md",
-    "dockerfile",
-    "license",
     "readme.md",
-    "app.js",
-    "package-lock.json",
-    "package.json",
-    "sample",
-    "sample/dockerfile",
-    "sample/compose.yaml"
+    "requirements.txt",
+    "src",
+    "src/calculator.py",
+    "tests",
+    "tests/test_calculator.py"
   ],
   "metadata": {
-    "description": "Example used to demonstrate docker init CLI for a simple Hello World Node Program",
+    "description": null,
     "topics": [],
-    "stars": 8,
-    "forks": 50,
-    "watchers": 3,
-    "license": "Apache-2.0",
+    "stars": 0,
+    "forks": 0,
+    "watchers": 0,
+    "license": "None",
     "default_branch": "main",
-    "last_commit": "2024-12-02T10:58:16Z"
+    "last_commit": "2025-12-07T23:00:44Z"
   },
   "composition": {
     "languages": {
-      "Dockerfile": 10,
-      "JavaScript": 90
+      "Python": 100
     },
-    "dominant_language": "JavaScript",
-    "total_files": 13,
+    "dominant_language": "Python",
+    "total_files": 6,
     "file_types_count": {
-      "github": 1,
-      "github/workflows": 1,
-      "yaml": 2,
-      "md": 2,
-      "(none)": 4,
-      "js": 1,
-      "json": 2
+      "md": 1,
+      "txt": 1,
+      "(none)": 2,
+      "py": 2
     },
     "binary_file_ratio": "0.00%",
     "has_docs": true,
-    "has_tests": false
+    "has_tests": true
   },
   "build_and_dependency": {
     "package_managers": [
-      "package.json"
+      "requirements.txt"
     ],
     "package_manager_count": 1,
     "build_systems": [],
     "frameworks": [],
-    "runtimes": [],
-    "node_metadata": {
-      "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-      },
-      "dependencies": {},
-      "engines": {},
-      "nodeVersion": null
+    "runtimes": [
+      "Python"
+    ],
+    "node_metadata": {},
+    "python_metadata": {
+      "requirements_raw": "pytest\n",
+      "packages": [
+        "pytest"
+      ],
+      "has_pytest": true
     },
-    "python_metadata": {},
     "java_metadata": {}
   },
   "testing_and_linting": {
@@ -70,18 +60,16 @@
     "coverage_tools": []
   },
   "containerization_and_deployment": {
-    "has_dockerfile": true,
-    "has_docker_compose": true,
+    "has_dockerfile": false,
+    "has_docker_compose": false,
     "registry_reference": false,
     "deployment_configs": []
   },
   "ci_cd": {
-    "has_workflows": true,
+    "has_workflows": false,
     "existing_ci_tools": [],
-    "workflow_count": 1,
-    "workflow_triggers": [
-      "push"
-    ]
+    "workflow_count": 0,
+    "workflow_triggers": []
   },
   "security": {
     "has_env_file": false,
@@ -90,9 +78,10 @@
   },
   "derived": {
     "monorepo": false,
-    "ci_required": false,
+    "ci_required": true,
     "recommended_templates": [
-      "docker-build"
+      "python-ci",
+      "add-ci-workflow"
     ]
   }
 }

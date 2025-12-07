@@ -11,7 +11,7 @@ jobs:
     {{#if matrix.python_versions}}
     strategy:
       matrix:
-        python: [{{#each matrix.python_versions}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+        python: [{{#each matrix.python_versions}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
     {{/if}}
     steps:
       - uses: actions/checkout@v4

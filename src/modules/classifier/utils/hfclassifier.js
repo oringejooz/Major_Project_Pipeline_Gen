@@ -1,12 +1,11 @@
 // src/modules/classifier/utils/hfclassifier.js
 import { InferenceClient } from "@huggingface/inference";
 import crypto from "crypto";
-import dotenv from "dotenv";
 import fs from "fs/promises";
 import path from "path";
 
-dotenv.config({ path: "./hf-token.env" });
-dotenv.config({ path: "src/modules/classifier/.env" });
+// Root-level dotenv should be loaded by the application entrypoint.
+// Do not load module-local .env files here; rely on `process.env` instead.
 
 const HF_TOKEN = process.env.HF_TOKEN;
 if (!HF_TOKEN) console.warn("⚠️ HF_TOKEN missing. Hugging Face calls will be skipped.");

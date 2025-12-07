@@ -11,7 +11,7 @@ jobs:
     {{#if matrix.node_versions}}
     strategy:
       matrix:
-        node: [{{#each matrix.node_versions}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}]
+        node: [{{#each matrix.node_versions}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
     {{/if}}
     steps:
       - uses: actions/checkout@v4

@@ -1,9 +1,8 @@
 // src/modules/classifier/utils/paramExtractor.js
 import { InferenceClient } from "@huggingface/inference";
-import dotenv from "dotenv";
 
-dotenv.config({ path: "src/modules/classifier/.env" });
-
+// Root-level dotenv should be loaded by the application entrypoint.
+// Rely on `process.env.HF_TOKEN` instead of a module-local .env file.
 const HF_TOKEN = process.env.HF_TOKEN || null;
 const HF_PARAM_MODEL = process.env.HF_PARAM_MODEL || null; // <= ONLY if you explicitly set one
 
@@ -163,6 +162,7 @@ function deterministicFallback(features, chosenTemplates = []) {
     out.project_type = "python";
     out.language = "py";
     out.package_manager = "pip";
+    out.python_version = "3.11";  // Fallback version for setup-python when no matrix
     out.lint_command = "flake8 . || echo 'No flake8 config'";
     out.test_command = pythonMeta.has_pytest
       ? "pytest"
@@ -174,6 +174,10 @@ function deterministicFallback(features, chosenTemplates = []) {
       paths: ["~/.cache/pip"],
       key: "pip-cache-${{ hashFiles('**/requirements.txt') }}",
     };
+    // Set dependency_file if requirements.txt is detected (used by pip-install.hbs template)
+    out.dependency_file = detectedFiles.includes("requirements.txt") ? "requirements.txt" : null;
+    // Set pyproject if pyproject.toml is detected
+    out.pyproject = detectedFiles.includes("pyproject.toml");
     return out;
   }
 
@@ -182,6 +186,7 @@ function deterministicFallback(features, chosenTemplates = []) {
     const out = { ...base };
     out.project_type = "java";
     out.language = "java";
+    out.java_version = "17";  // Fallback Java version
     const hasPom = detectedFiles.includes("pom.xml");
     const hasGradle =
       detectedFiles.includes("build.gradle") ||
@@ -198,6 +203,7 @@ function deterministicFallback(features, chosenTemplates = []) {
       ? "./gradlew test"
       : "";
     out.artifact_path = hasPom ? "target/" : hasGradle ? "build/" : "";
+    out.matrix = { java_versions: ["11", "17"] };  // Matrix for Java versions
     return out;
   }
 

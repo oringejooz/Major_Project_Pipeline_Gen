@@ -1,28 +1,25 @@
 {
-  "project_type": "node",
-  "language": "js",
-  "package_manager": "npm",
-  "lint_command": "npm run lint || echo 'No lint script'",
-  "test_command": "npm test",
-  "build_command": "npm run build || echo 'No build script'",
-  "artifact_path": "",
+  "project_type": "python",
+  "language": "py",
+  "package_manager": "pip",
+  "lint_command": "flake8 . || echo 'No flake8 config'",
+  "test_command": "pytest",
+  "build_command": "python -m build || python setup.py sdist",
+  "artifact_path": "dist/",
   "matrix": {
-    "node_versions": [
-      "16.x",
-      "18.x",
-      "20.x"
+    "python_versions": [
+      "3.9",
+      "3.10",
+      "3.11"
     ]
   },
   "caching": {
     "paths": [
-      "~/.npm"
+      "~/.cache/pip"
     ],
-    "key": "npm-cache-${{ hashFiles('**/package-lock.json') }}"
+    "key": "pip-cache-${{ hashFiles('**/requirements.txt') }}"
   },
-  "secrets_required": [
-    "DOCKER_USERNAME",
-    "DOCKER_PASSWORD"
-  ],
+  "secrets_required": [],
   "deployment": {
     "enabled": false,
     "provider": "",
@@ -30,13 +27,13 @@
     "mode": ""
   },
   "container": {
-    "enabled": true,
-    "image": "docker.io/dockersamples/helloworld-demo-node",
-    "registry": "docker.io",
+    "enabled": false,
+    "image": "",
+    "registry": "",
     "platforms": [
       "linux/amd64"
     ],
-    "cache": true,
+    "cache": false,
     "tags": [],
     "provenance": false,
     "sbom": false,
@@ -51,174 +48,115 @@
     "release_on_tag": true
   },
   "paths_filters": {},
-  "node_version": "18.x",
+  "python_version": "3.11",
+  "dependency_file": "requirements.txt",
+  "pyproject": false,
   "_classifier": {
     "rules": [
       {
-        "label": "docker",
-        "confidence": 0.99,
-        "reason": "Dockerfile present"
-      },
-      {
-        "label": "node",
+        "label": "python",
         "confidence": 0.97,
-        "reason": "package.json present"
+        "reason": "requirements.txt present"
       },
       {
-        "label": "polyglot",
+        "label": "generic",
         "confidence": 0.5,
-        "reason": "multiple languages detected: Dockerfile, JavaScript"
+        "reason": "derived recommended template: add-ci-workflow"
       }
     ],
     "hf": {
-      "model": "facebook/bart-large-mnli",
+      "model": "heuristic-fallback",
       "labels": [
-        "node",
-        "polyglot",
+        "python",
         "docker",
-        "go",
-        "monorepo",
         "generic",
-        "terraform",
+        "node",
         "java",
-        "python"
+        "go",
+        "terraform",
+        "monorepo"
       ],
       "scores": [
-        0.9798570871353149,
-        0.9554028511047363,
-        0.8078280687332153,
-        0.5740314722061157,
-        0.07630454003810883,
-        0.043752703815698624,
-        0.014320550486445427,
-        0.005065648350864649,
-        0.0001642736460780725
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ],
-      "raw": [
-        {
-          "label": "node",
-          "score": 0.9798570871353149
-        },
-        {
-          "label": "polyglot",
-          "score": 0.9554028511047363
-        },
-        {
-          "label": "docker",
-          "score": 0.8078280687332153
-        },
-        {
-          "label": "go",
-          "score": 0.5740314722061157
-        },
-        {
-          "label": "monorepo",
-          "score": 0.07630454003810883
-        },
-        {
-          "label": "generic",
-          "score": 0.043752703815698624
-        },
-        {
-          "label": "terraform",
-          "score": 0.014320550486445427
-        },
-        {
-          "label": "java",
-          "score": 0.005065648350864649
-        },
-        {
-          "label": "python",
-          "score": 0.0001642736460780725
-        }
-      ]
+      "raw": {
+        "error": "ProviderApiError: Failed to perform inference: Invalid username or password."
+      }
     },
     "merged": [
       {
-        "label": "node",
+        "label": "python",
         "rule": 0.97,
-        "hf": 0.9798570871353149,
-        "combined": 0.9768999609947204,
+        "hf": 1,
+        "combined": 0.9909999999999999,
         "reasons": [
           "strong model confidence"
         ]
       },
       {
         "label": "docker",
-        "rule": 0.99,
-        "hf": 0.8078280687332153,
-        "combined": 0.9353484206199646,
-        "reasons": [
-          "strong rule-based evidence"
-        ]
-      },
-      {
-        "label": "polyglot",
-        "rule": 0.5,
-        "hf": 0.9554028511047363,
-        "combined": 0.8187819957733155,
+        "rule": 0,
+        "hf": 1,
+        "combined": 0.7,
         "reasons": [
           "strong model confidence"
-        ]
-      },
-      {
-        "label": "go",
-        "rule": 0,
-        "hf": 0.5740314722061157,
-        "combined": 0.4592251777648926,
-        "reasons": [
-          "no rule evidence; model only"
-        ]
-      },
-      {
-        "label": "monorepo",
-        "rule": 0,
-        "hf": 0.07630454003810883,
-        "combined": 0.061043632030487065,
-        "reasons": [
-          "no rule evidence; model only"
         ]
       },
       {
         "label": "generic",
-        "rule": 0,
-        "hf": 0.043752703815698624,
-        "combined": 0.0350021630525589,
+        "rule": 0.5,
+        "hf": 0,
+        "combined": 0.4,
         "reasons": [
-          "no rule evidence; model only"
+          "no model evidence; rules only"
         ]
       },
       {
-        "label": "terraform",
+        "label": "node",
         "rule": 0,
-        "hf": 0.014320550486445427,
-        "combined": 0.011456440389156343,
-        "reasons": [
-          "no rule evidence; model only"
-        ]
+        "hf": 0,
+        "combined": 0,
+        "reasons": []
       },
       {
         "label": "java",
         "rule": 0,
-        "hf": 0.005065648350864649,
-        "combined": 0.004052518680691719,
-        "reasons": [
-          "no rule evidence; model only"
-        ]
+        "hf": 0,
+        "combined": 0,
+        "reasons": []
       },
       {
-        "label": "python",
+        "label": "go",
         "rule": 0,
-        "hf": 0.0001642736460780725,
-        "combined": 0.000131418916862458,
-        "reasons": [
-          "no rule evidence; model only"
-        ]
+        "hf": 0,
+        "combined": 0,
+        "reasons": []
+      },
+      {
+        "label": "terraform",
+        "rule": 0,
+        "hf": 0,
+        "combined": 0,
+        "reasons": []
+      },
+      {
+        "label": "monorepo",
+        "rule": 0,
+        "hf": 0,
+        "combined": 0,
+        "reasons": []
       }
     ],
     "chosen": [
-      "node"
+      "python"
     ],
-    "primary": "node"
+    "primary": "python"
   }
 }
