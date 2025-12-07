@@ -1,12 +1,12 @@
 import fs from "fs/promises";
 import path from "node:path";
-import { classify } from "./src/modules/classifier/run.js";
-import { analyzeRepo } from "./src/modules/detector/repo-analyzer.js";
-import { createPrForWorkflow } from "./src/modules/renderer/pr.js";
-import { render } from "./src/modules/renderer/render.js";
+import { classify } from "./modules/classifier/run.js";
+import { analyzeRepo } from "./modules/detector/repo-analyzer.js";
+import { createPrForWorkflow } from "./modules/renderer/pr.js";
+import { render } from "./modules/renderer/render.js";
 
 export default (app) => {
-  app.log("pipeline-gen Probot app loaded");
+  console.log("🚀 CICD Pipeline Generator Probot app loaded");
 
   async function handleRepo(octokit, owner, repo) {
     const repoUrl = `https://github.com/${owner}/${repo}`;
@@ -24,15 +24,15 @@ export default (app) => {
     // Commit workflow and open PR
     try {
       const pr = await createPrForWorkflow(octokit, owner, repo, ".github/workflows/pipeline-gen.yml", rendered);
-      app.log(`Created PR: ${pr.html_url}`);
+      console.log(`✅ Created PR: ${pr.html_url}`);
     } catch (err) {
-      app.log.error(`Failed to create PR for ${owner}/${repo}: ${err.message || err}`);
+      console.error(`❌ Failed to create PR for ${owner}/${repo}: ${err.message || err}`);
     }
   }
 
   app.on(["installation", "installation_repositories", "push", "repository"], async (context) => {
     const event = context.name;
-    app.log(`Received event: ${event}`);
+    console.log(`📧 Received event: ${event}`);
 
     // When Probot runs, context.octokit is authenticated for the installation if present.
     const octokit = context.octokit;
@@ -60,7 +60,7 @@ export default (app) => {
         }
       }
     } catch (err) {
-      app.log.error(err);
+      console.error(`❌ Error processing event: ${err.message || err}`);
     }
   });
 };

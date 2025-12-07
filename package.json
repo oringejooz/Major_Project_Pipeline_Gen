@@ -1,7 +1,7 @@
 {
-  "name": "pipeline-gen",
+  "name": "cicd-pipeline-generator",
   "version": "1.0.0",
-  "description": "",
+  "description": "GitHub App that analyzes repositories and generates optimized CI/CD pipelines",
   "main": "index.js",
   "type":"module",
   "scripts": {
