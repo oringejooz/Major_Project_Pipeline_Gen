@@ -1,7 +1,46 @@
-node_modules
-npm-debug.log
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Secrets
 .env
+.env.local
+.env.*.local
 .env.example
 secrets/
 *.pem
+*.key
+*.crt
+*.pfx
+
+# Generated outputs
 outputs/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.npm
+.eslintcache
+.node_repl_history
+
+# Temporary
+tmp/
+temp/
+.cache/
