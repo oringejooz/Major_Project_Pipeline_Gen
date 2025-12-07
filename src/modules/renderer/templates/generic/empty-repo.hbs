@@ -1,0 +1,14 @@
+name: Minimal CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Welcome
+        run: echo "This repository appears empty or unrecognized. Add language-specific workflows as needed."

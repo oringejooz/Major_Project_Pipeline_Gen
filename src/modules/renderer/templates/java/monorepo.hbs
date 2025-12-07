@@ -1,0 +1,25 @@
+name: Java Monorepo CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: {{#each packages}}"{{this}}", {{/each}}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build package
+        run: |
+          cd {{{expr "matrix.package"}}}
+          mvn -B -DskipTests package
+      - name: Test package
+        run: |
+          cd {{{expr "matrix.package"}}}
+          mvn test || echo "No tests"

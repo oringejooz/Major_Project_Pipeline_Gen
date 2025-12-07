@@ -1,9 +1,9 @@
 // src/modules/classifier/utils/hfclassifier.js
 import { InferenceClient } from "@huggingface/inference";
+import crypto from "crypto";
 import dotenv from "dotenv";
 import fs from "fs/promises";
 import path from "path";
-import crypto from "crypto";
 
 dotenv.config({ path: "./hf-token.env" });
 dotenv.config({ path: "src/modules/classifier/.env" });
@@ -46,8 +46,11 @@ export async function classifyZeroShot(summaryText, candidateLabels = [], opts =
   const cached = await _readCache(key);
   if (cached) return cached;
 
+  // If no token or client available, fall back to deterministic heuristic
   if (!HF_TOKEN || !hf) {
-    return { model, labels: [], scores: [], raw: { error: "no-token" } };
+    const heuristic = heuristicLabels(summaryText, candidateLabels);
+    await _writeCache(key, heuristic);
+    return heuristic;
   }
 
   try {
@@ -55,7 +58,6 @@ export async function classifyZeroShot(summaryText, candidateLabels = [], opts =
       model,
       inputs: summaryText,
       parameters: { candidate_labels: candidateLabels, multi_label },
-      provider: "hf-inference",
     });
 
     // Normalize possible formats:
@@ -75,12 +77,49 @@ export async function classifyZeroShot(summaryText, candidateLabels = [], opts =
     await _writeCache(key, out);
     return out;
   } catch (err) {
-    console.error("❌ HF zero-shot failed:", err.response?.data || err.message);
-    return {
-      model,
-      labels: [],
-      scores: [],
-      raw: { error: String(err?.response?.data || err?.message) },
-    };
+    console.error("❌ HF zero-shot failed:", err?.response?.data || err?.message || err);
+    // Fallback to heuristic labeling — better than returning nothing
+    const fallback = heuristicLabels(summaryText, candidateLabels, err);
+    await _writeCache(key, fallback);
+    return fallback;
   }
+}
+
+/**
+ * heuristicLabels — simple fallback when HF inference is unavailable or fails.
+ * It scores candidate labels based on keyword matches in the summary.
+ */
+function heuristicLabels(summaryText, candidateLabels = [], err = null) {
+  const text = (summaryText || "").toLowerCase();
+  const labelScores = [];
+
+  for (const label of candidateLabels) {
+    const l = String(label).toLowerCase();
+    let score = 0;
+    // direct keyword match
+    if (text.includes(l)) score += 0.7;
+    // heuristic synonyms
+    if (l === "node" && /npm|node|package.json|express|react/.test(text)) score += 0.9;
+    if (l === "python" && /python|requirements.txt|pip|flask|django|fastapi/.test(text)) score += 0.9;
+    if (l === "java" && /maven|gradle|pom.xml|spring-boot/.test(text)) score += 0.9;
+    if (l === "docker" && /dockerfile|container|docker/.test(text)) score += 0.95;
+    if (l === "monorepo" && /packages\//.test(text)) score += 0.8;
+    // small boost for presence in label name
+    if (text.match(new RegExp(`\\b${escapeRegex(l)}\\b`))) score += 0.05;
+
+    labelScores.push({ label, score: Math.min(1, score) });
+  }
+
+  // sort desc
+  labelScores.sort((a, b) => b.score - a.score);
+  return {
+    model: "heuristic-fallback",
+    labels: labelScores.map((s) => s.label),
+    scores: labelScores.map((s) => s.score),
+    raw: { error: err ? String(err) : "hf-missing" },
+  };
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

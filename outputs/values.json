@@ -5,7 +5,7 @@
   "lint_command": "npm run lint || echo 'No lint script'",
   "test_command": "npm test",
   "build_command": "npm run build || echo 'No build script'",
-  "artifact_path": "dist/",
+  "artifact_path": "",
   "matrix": {
     "node_versions": [
       "16.x",
@@ -20,7 +20,8 @@
     "key": "npm-cache-${{ hashFiles('**/package-lock.json') }}"
   },
   "secrets_required": [
-    "DOCKER_REGISTRY_TOKEN"
+    "DOCKER_USERNAME",
+    "DOCKER_PASSWORD"
   ],
   "deployment": {
     "enabled": false,
@@ -30,8 +31,8 @@
   },
   "container": {
     "enabled": true,
-    "image": "ghcr.io/OWNER/REPO",
-    "registry": "ghcr.io",
+    "image": "docker.io/dockersamples/helloworld-demo-node",
+    "registry": "docker.io",
     "platforms": [
       "linux/amd64"
     ],
@@ -83,52 +84,52 @@
         "python"
       ],
       "scores": [
-        0.9499667286872864,
-        0.9455862045288086,
-        0.8005883097648621,
-        0.4436577558517456,
-        0.08578284829854965,
-        0.04180695116519928,
-        0.017585735768079758,
-        0.012457771226763725,
-        0.00039502434083260596
+        0.9798570871353149,
+        0.9554028511047363,
+        0.8078280687332153,
+        0.5740314722061157,
+        0.07630454003810883,
+        0.043752703815698624,
+        0.014320550486445427,
+        0.005065648350864649,
+        0.0001642736460780725
       ],
       "raw": [
         {
           "label": "node",
-          "score": 0.9499667286872864
+          "score": 0.9798570871353149
         },
         {
           "label": "polyglot",
-          "score": 0.9455862045288086
+          "score": 0.9554028511047363
         },
         {
           "label": "docker",
-          "score": 0.8005883097648621
+          "score": 0.8078280687332153
         },
         {
           "label": "go",
-          "score": 0.4436577558517456
+          "score": 0.5740314722061157
         },
         {
           "label": "monorepo",
-          "score": 0.08578284829854965
+          "score": 0.07630454003810883
         },
         {
           "label": "generic",
-          "score": 0.04180695116519928
+          "score": 0.043752703815698624
         },
         {
           "label": "terraform",
-          "score": 0.017585735768079758
+          "score": 0.014320550486445427
         },
         {
           "label": "java",
-          "score": 0.012457771226763725
+          "score": 0.005065648350864649
         },
         {
           "label": "python",
-          "score": 0.00039502434083260596
+          "score": 0.0001642736460780725
         }
       ]
     },
@@ -136,17 +137,17 @@
       {
         "label": "node",
         "rule": 0.97,
-        "hf": 0.9499667286872864,
-        "combined": 0.9639900186061858,
+        "hf": 0.9798570871353149,
+        "combined": 0.9768999609947204,
         "reasons": [
-          "strong rule-based evidence"
+          "strong model confidence"
         ]
       },
       {
         "label": "docker",
         "rule": 0.99,
-        "hf": 0.8005883097648621,
-        "combined": 0.9331764929294586,
+        "hf": 0.8078280687332153,
+        "combined": 0.9353484206199646,
         "reasons": [
           "strong rule-based evidence"
         ]
@@ -154,8 +155,8 @@
       {
         "label": "polyglot",
         "rule": 0.5,
-        "hf": 0.9455862045288086,
-        "combined": 0.811910343170166,
+        "hf": 0.9554028511047363,
+        "combined": 0.8187819957733155,
         "reasons": [
           "strong model confidence"
         ]
@@ -163,8 +164,8 @@
       {
         "label": "go",
         "rule": 0,
-        "hf": 0.4436577558517456,
-        "combined": 0.3549262046813965,
+        "hf": 0.5740314722061157,
+        "combined": 0.4592251777648926,
         "reasons": [
           "no rule evidence; model only"
         ]
@@ -172,8 +173,8 @@
       {
         "label": "monorepo",
         "rule": 0,
-        "hf": 0.08578284829854965,
-        "combined": 0.06862627863883973,
+        "hf": 0.07630454003810883,
+        "combined": 0.061043632030487065,
         "reasons": [
           "no rule evidence; model only"
         ]
@@ -181,8 +182,8 @@
       {
         "label": "generic",
         "rule": 0,
-        "hf": 0.04180695116519928,
-        "combined": 0.033445560932159425,
+        "hf": 0.043752703815698624,
+        "combined": 0.0350021630525589,
         "reasons": [
           "no rule evidence; model only"
         ]
@@ -190,8 +191,8 @@
       {
         "label": "terraform",
         "rule": 0,
-        "hf": 0.017585735768079758,
-        "combined": 0.014068588614463806,
+        "hf": 0.014320550486445427,
+        "combined": 0.011456440389156343,
         "reasons": [
           "no rule evidence; model only"
         ]
@@ -199,8 +200,8 @@
       {
         "label": "java",
         "rule": 0,
-        "hf": 0.012457771226763725,
-        "combined": 0.00996621698141098,
+        "hf": 0.005065648350864649,
+        "combined": 0.004052518680691719,
         "reasons": [
           "no rule evidence; model only"
         ]
@@ -208,8 +209,8 @@
       {
         "label": "python",
         "rule": 0,
-        "hf": 0.00039502434083260596,
-        "combined": 0.0003160194726660848,
+        "hf": 0.0001642736460780725,
+        "combined": 0.000131418916862458,
         "reasons": [
           "no rule evidence; model only"
         ]

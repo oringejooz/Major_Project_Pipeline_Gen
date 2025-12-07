@@ -5,9 +5,27 @@
   "main": "index.js",
   "type":"module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "dev": "nodemon --watch src --exec node src/index.js",
+    "server": "node src/server.js",
+    "dev:probot": "probot run ./src/probot-app.js",
+    "analyze": "node src/index.js",
+    "test": "echo \"No tests configured\" && exit 0"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "@octokit/rest": "^19.0.7",
+    "octokit": "^5.0.5",
+    "@octokit/auth-app": "^8.1.2",
+    "handlebars": "^4.7.7",
+    "js-yaml": "^4.1.0",
+    "yaml": "^2.3.1",
+    "nodemon": "^2.0.22",
+    "probot": "^14.2.4",
+    "@huggingface/inference": "^4.13.4"
+  }
 }

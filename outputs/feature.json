@@ -27,10 +27,10 @@
   },
   "composition": {
     "languages": {
-      "Dockerfile": "70.13",
-      "JavaScript": "29.87"
+      "Dockerfile": 10,
+      "JavaScript": 90
     },
-    "dominant_language": "Dockerfile",
+    "dominant_language": "JavaScript",
     "total_files": 13,
     "file_types_count": {
       "github": 1,
@@ -71,7 +71,7 @@
   },
   "containerization_and_deployment": {
     "has_dockerfile": true,
-    "has_docker_compose": false,
+    "has_docker_compose": true,
     "registry_reference": false,
     "deployment_configs": []
   },

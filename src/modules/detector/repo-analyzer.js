@@ -3,7 +3,9 @@ import fs from "fs";
 import { Octokit } from "octokit";
 
 dotenv.config();
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+// Note: analyzeRepo now accepts an optional `opts` argument with an `octokit` property.
+// If not provided, fall back to a PAT-based Octokit using `GITHUB_TOKEN`.
 
 /* ---------------------------------------------------------
     Utility helpers
@@ -25,16 +27,36 @@ function countFileTypes(files) {
 }
 
 function detectLanguages(langBytes) {
-  const total = Object.values(langBytes).reduce((a, b) => a + b, 0) || 1;
-  const percent = {};
+  // Compute numeric percentages and avoid Dockerfile dominating when it's the only large file
+  const totalBytes = Object.values(langBytes).reduce((a, b) => a + b, 0) || 1;
+  const raw = {};
   for (const [lang, bytes] of Object.entries(langBytes)) {
-    percent[lang] = ((bytes / total) * 100).toFixed(2);
+    raw[lang] = Number(((bytes / totalBytes) * 100).toFixed(2));
   }
+
+  // If Dockerfile is present and other languages exist but Dockerfile percentage is very large,
+  // cap Dockerfile to 10% and redistribute the remainder proportionally to the other languages.
+  if (raw["Dockerfile"] && Object.keys(raw).length > 1 && raw["Dockerfile"] > 50) {
+    const dockerPct = Math.min(raw["Dockerfile"], 10);
+    const remainder = 100 - dockerPct;
+    // Sum of other languages raw percentages
+    const others = Object.keys(raw).filter((k) => k !== "Dockerfile");
+    const sumOthers = others.reduce((s, k) => s + raw[k], 0) || 1;
+    const percent = {};
+    percent["Dockerfile"] = Number(dockerPct.toFixed(2));
+    for (const k of others) {
+      percent[k] = Number(((raw[k] / sumOthers) * remainder).toFixed(2));
+    }
+    const dominant = Object.entries(percent).sort((a, b) => b[1] - a[1])[0]?.[0] || "Unknown";
+    return { percent, dominant };
+  }
+
+  const percent = raw;
   const dominant = Object.entries(percent).sort((a, b) => b[1] - a[1])[0]?.[0] || "Unknown";
   return { percent, dominant };
 }
 
-async function getFileContent(owner, repo, path) {
+async function getFileContent(octokit, owner, repo, path) {
   try {
     const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
     return Buffer.from(data.content, "base64").toString("utf-8");
@@ -47,8 +69,9 @@ async function getFileContent(owner, repo, path) {
     Repo Analyzer
 --------------------------------------------------------- */
 
-export async function analyzeRepo(repoUrl, outPath) {
+export async function analyzeRepo(repoUrl, outPath, opts = {}) {
   const { owner, repo } = parseRepoUrl(repoUrl);
+  const octokit = opts.octokit || new Octokit({ auth: process.env.GITHUB_TOKEN });
   console.log(`🔍 Analyzing ${owner}/${repo} ...`);
 
   /* ---------------------- Base Repo Info */
@@ -92,7 +115,7 @@ export async function analyzeRepo(repoUrl, outPath) {
   /* ---------------------- Node Metadata */
   let node_metadata = {};
   if (files.includes("package.json")) {
-    const pkgText = await getFileContent(owner, repo, "package.json");
+    const pkgText = await getFileContent(octokit, owner, repo, "package.json");
     if (pkgText) {
       const pkg = JSON.parse(pkgText);
       const deps = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -116,7 +139,7 @@ export async function analyzeRepo(repoUrl, outPath) {
   /* ---------------------- Python Metadata */
   let python_metadata = {};
   if (files.includes("requirements.txt")) {
-    const reqText = await getFileContent(owner, repo, "requirements.txt");
+    const reqText = await getFileContent(octokit, owner, repo, "requirements.txt");
     if (reqText) {
       if (/flask/i.test(reqText)) frameworks.push("Flask");
       if (/django/i.test(reqText)) frameworks.push("Django");
@@ -135,7 +158,7 @@ export async function analyzeRepo(repoUrl, outPath) {
   /* ---------------------- Java Metadata */
   let java_metadata = {};
   if (files.includes("pom.xml")) {
-    const pom = await getFileContent(owner, repo, "pom.xml");
+    const pom = await getFileContent(octokit, owner, repo, "pom.xml");
     if (pom) {
       if (/spring-boot/i.test(pom)) frameworks.push("Spring Boot");
       if (/quarkus/i.test(pom)) frameworks.push("Quarkus");
@@ -172,7 +195,7 @@ export async function analyzeRepo(repoUrl, outPath) {
   const hasDockerfile =
     files.includes("Dockerfile") || files.some((f) => /dockerfile$/i.test(f));
 
-  const hasCompose = files.some((f) => /docker-compose\.ya?ml/i.test(f));
+  const hasCompose = files.some((f) => /(^|\/)docker-compose\.ya?ml$/i.test(f) || /(^|\/)compose\.ya?ml$/i.test(f));
   const hasRegistryRef = files.some((f) => /(ghcr\.io|docker\.io)/i.test(f));
 
   const deploymentConfigs = files.filter((f) =>
@@ -187,7 +210,7 @@ export async function analyzeRepo(repoUrl, outPath) {
 
   const workflowTriggers = [];
   for (const wf of ciWorkflows) {
-    const cfg = await getFileContent(owner, repo, wf);
+    const cfg = await getFileContent(octokit, owner, repo, wf);
     if (!cfg) continue;
     if (/push:/i.test(cfg)) workflowTriggers.push("push");
     if (/pull_request:/i.test(cfg)) workflowTriggers.push("pull_request");

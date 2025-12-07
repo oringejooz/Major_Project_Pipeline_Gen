@@ -1,8 +1,8 @@
 // scripts/render.js
-import { promises as fs } from 'node:fs';
-import { fileURLToPath } from "url";
-import path from 'node:path';
 import Handlebars from 'handlebars';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from "url";
 
 async function registerHelpers() {
   Handlebars.registerHelper('eq', (a, b) => a === b);
@@ -40,15 +40,23 @@ export async function render(valuesPath, outPath,template_type) {
   // const valuesPath = path.resolve('outputs/values.json');
   const valuesSrc = await fs.readFile(valuesPath, 'utf8');
   const context = JSON.parse(valuesSrc);
+  const projectType = (context.project_type || context.language || '').toLowerCase();
 
-  var lang;
-  if(context.project_type=='js'|| context.project_type=='node' || context.project_type=='nodejs' ){ lang='node'}
-  else if(context.project_type=='py' || context.project_type=='python'){ lang='python'}
-    
+  let langDir = 'generic';
+  if (projectType.includes('node') || projectType === 'js' || projectType === 'nodejs') langDir = 'node';
+  else if (projectType.includes('python') || projectType === 'py') langDir = 'python';
+  else if (projectType.includes('java')) langDir = 'java';
+  else if (projectType.includes('docker')) langDir = 'generic';
 
-  //change template type  as needed (basic-layout.hbs, intermediate.hbs)
+  // change template type  as needed (basic-layout.hbs, intermediate.hbs)
   // const template_type='intermediate.hbs'
-  const layoutPath = path.resolve(__dirname,`templates/${lang}/${template_type}`);
+  let layoutPath = path.resolve(__dirname, `templates/${langDir}/${template_type}`);
+  // Fallback to generic intermediate if specific template not found
+  try {
+    await fs.access(layoutPath);
+  } catch (err) {
+    layoutPath = path.resolve(__dirname, `templates/generic/${template_type}`);
+  }
   // const outPath = path.resolve('outputs/ci.yml');
 
   await registerPartials(partialsDir);
@@ -57,11 +65,11 @@ export async function render(valuesPath, outPath,template_type) {
   const template = Handlebars.compile(layoutSrc, { noEscape: true });
 
   const output = template(context);
-
   await fs.mkdir(path.dirname(outPath), { recursive: true });
   await fs.writeFile(outPath, output, 'utf8');
 
   console.log(`Output file generated at: ${outPath}`);
+  return output;
 }
 
 // main().catch((err) => {

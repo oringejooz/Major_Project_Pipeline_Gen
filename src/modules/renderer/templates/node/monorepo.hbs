@@ -1,0 +1,24 @@
+name: Monorepo CI (Node)
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: {{#each packages}}"{{this}}", {{/each}}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: |
+          cd {{{expr "matrix.package"}}}
+          npm ci
+      - name: Run tests
+        run: |
+          cd {{{expr "matrix.package"}}}
+          npm test || echo "No tests"

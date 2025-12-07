@@ -1,0 +1,33 @@
+name: Java CI (Intermediate)
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [11, 17]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: {{{expr "matrix.java"}}}
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: mvn-{{{expr "runner.os"}}}-{{{expr "hashFiles('**/pom.xml')"}}}
+      - name: Build
+        run: mvn -B -DskipTests package
+      - name: Test
+        run: mvn test
+      {{#if artifact_path}}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: {{artifact_path}}
+      {{/if}}

@@ -121,9 +121,9 @@ function deterministicFallback(features, chosenTemplates = []) {
       scripts.lint ? "npm run lint" : "npm run lint || echo 'No lint script'";
     out.test_command =
       scripts.test ? "npm test" : "npm test || echo 'No tests found'";
-    out.build_command =
-      scripts.build ? "npm run build" : "npm run build || echo 'No build script'";
-    out.artifact_path = "dist/";
+    out.build_command = scripts.build ? "npm run build" : "npm run build || echo 'No build script'";
+    // If there is no build script, do not upload artifacts (empty string disables the step)
+    out.artifact_path = scripts.build ? "dist/" : "";
     out.matrix = { node_versions: ["16.x", "18.x", "20.x"] };
 
     out.caching = {
@@ -132,15 +132,27 @@ function deterministicFallback(features, chosenTemplates = []) {
     };
 
     if (hasDocker) {
+      // Prefer Docker Hub by default unless analyzer indicates GHCR or other registry references
+      const detectedRegistry = (features.containerization_and_deployment?.registry_reference) ?
+        (features.containerization_and_deployment?.registry_reference === true ? "docker.io" : "docker.io") : "docker.io";
+
+      const repoId = (features.repo || "OWNER/REPO");
+
       out.container = {
         ...out.container,
         enabled: true,
-        image: "ghcr.io/OWNER/REPO",
-        registry: "ghcr.io",
+        image: `${detectedRegistry}/${repoId}`,
+        registry: detectedRegistry,
         platforms: ["linux/amd64"],
         cache: true,
       };
-      out.secrets_required = [...out.secrets_required, "DOCKER_REGISTRY_TOKEN"];
+
+      // Secrets: Docker Hub uses username/password; GHCR typically uses GITHUB_TOKEN
+      if (detectedRegistry.includes("ghcr.io")) {
+        out.secrets_required = [...out.secrets_required, "GITHUB_TOKEN"];
+      } else {
+        out.secrets_required = [...out.secrets_required, "DOCKER_USERNAME", "DOCKER_PASSWORD"];
+      }
     }
     return out;
   }

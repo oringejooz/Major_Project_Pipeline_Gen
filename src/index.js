@@ -1,6 +1,6 @@
-import { analyzeRepo } from "./modules/detector/repo-analyzer.js";
-import {classify} from "./modules/classifier/run.js"
 import path from "node:path";
+import { classify } from "./modules/classifier/run.js";
+import { analyzeRepo } from "./modules/detector/repo-analyzer.js";
 import { render } from "./modules/renderer/render.js";
 
 //const repoUrl = "https://github.com/oringejooz/classifier-module.git";
