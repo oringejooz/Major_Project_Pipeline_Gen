@@ -4,6 +4,7 @@
     "readme.md",
     "requirements.txt",
     "src",
+    "src/__init__.py",
     "src/calculator.py",
     "tests",
     "tests/test_calculator.py"
@@ -16,19 +17,19 @@
     "watchers": 0,
     "license": "None",
     "default_branch": "main",
-    "last_commit": "2025-12-07T23:00:44Z"
+    "last_commit": "2025-12-08T00:10:57Z"
   },
   "composition": {
     "languages": {
       "Python": 100
     },
     "dominant_language": "Python",
-    "total_files": 6,
+    "total_files": 7,
     "file_types_count": {
       "md": 1,
       "txt": 1,
       "(none)": 2,
-      "py": 2
+      "py": 3
     },
     "binary_file_ratio": "0.00%",
     "has_docs": true,
